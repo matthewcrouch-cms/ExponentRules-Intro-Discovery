@@ -30,7 +30,7 @@ body{
 }
 .math{font-family:var(--math); white-space:nowrap}
 .math i{font-style:italic}
-sup{font-size:.62em; line-height:0}
+sup{font-size:.74em; line-height:0}
 button{font:inherit; cursor:pointer}
 :focus-visible{outline:3px solid var(--orange); outline-offset:2px}
 h1,h2,h3,p{margin:0}
@@ -68,7 +68,7 @@ textarea.txt:focus,input.txt:focus{border-color:var(--blue); outline:none}
 .opt.right{border-color:var(--good); background:var(--good-soft)}
 .opt.wrong{border-color:var(--bad); background:var(--bad-soft)}
 .opt[disabled]{cursor:default}
-.expanded{margin:16px 0 6px; padding:14px 16px; border-left:5px solid var(--orange); background:var(--orange-soft); border-radius:0 10px 10px 0; font-size:1.45rem; overflow-x:auto}
+.expanded{margin:16px 0 6px; padding:14px 16px; border-left:5px solid var(--orange); background:var(--orange-soft); border-radius:0 10px 10px 0; font-size:1.7rem; overflow-x:auto}
 .expanded .lbl,.chart-h{font:700 .85rem var(--ui); color:var(--orange); margin-bottom:4px}
 .explain{margin:12px 0; font-size:1.08rem}
 .verdict{border-radius:10px; padding:10px 14px; font-weight:650; margin:14px 0 4px}
@@ -80,7 +80,7 @@ textarea.txt:focus,input.txt:focus{border-color:var(--blue); outline:none}
 .chart-row:first-of-type{border-top:0}
 .chart-row>div>span{display:block; font:600 .78rem var(--ui); color:var(--muted); margin-bottom:3px}
 .chart-row .prop{font-weight:700}
-.chart-row .math{white-space:normal; font-size:1.18rem}
+.chart-row .math{white-space:normal; font-size:1.35rem}
 .ideas{margin-top:16px}
 .ideas h3{font-size:1rem; color:var(--muted); margin-bottom:8px}
 .ideas blockquote{margin:0 0 8px; padding:9px 14px; border-left:4px solid var(--blue); background:var(--blue-soft); border-radius:0 9px 9px 0}
@@ -119,12 +119,20 @@ textarea.txt:focus,input.txt:focus{border-color:var(--blue); outline:none}
 .t-title{font:700 1.5rem var(--math); margin:10px 0 6px}
 .t-expr{font-size:clamp(2.6rem,6vw,5rem); margin:10px 0 14px}
 .t-q{font-size:1.4rem; max-width:44rem}
-.stage .fields{font-size:2.3rem}
+.stage .fields{font-size:2.6rem}
+.stage .table{font-size:2.4rem}
+.stage .table th{font-size:1rem}
+.stage .expanded{font-size:2.3rem}
+.stage .explain{font-size:1.35rem}
+.stage .chart-row .math{font-size:1.7rem}
+.stage .chart-row>div{font-size:1.15rem}
+.stage .chart-row>div>span{font-size:.85rem}
+.notes .chart-row .math{font-size:1.3rem}
 .results h3{font-size:1.05rem; margin-bottom:10px}
 .rhead{font-size:1.02rem; margin-bottom:12px}
 .rhead b{font-size:1.6rem}
 .bar{display:grid; grid-template-columns:minmax(4rem,9rem) 1fr 2.2rem; gap:10px; align-items:center; margin:7px 0}
-.bar .lab{font-size:1.2rem; text-align:right}
+.bar .lab{font-size:1.5rem; text-align:right}
 .bar .track{height:26px; background:var(--blue-soft); border-radius:7px; overflow:hidden}
 .bar .fill{height:100%; background:var(--blue); transition:width .35s; min-width:3px}
 .bar.right .fill{background:var(--good)}
@@ -414,7 +422,7 @@ function isCorrect(st, v) {
    6. SHARED RENDER PIECES
    ===================================================================== */
 const chip = st => st.r > 0 && st.r < 5 ? `<span class="pill">Round ${st.r}: ${esc(ROUNDS[st.r].name)}</span> ${st.phase !== 'info' ? `<span class="pill phase">${PHASE[st.phase]}</span>` : ''}` : `<span class="pill">${st.r === 0 ? 'Welcome' : 'Wrap-up'}</span>`;
-const exprHTML = (st, cls) => st.expr ? `<div class="expr ${cls}">${M(st.expr)}</div>` : st.exprT ? `<div class="expr ${cls}" style="font-size:.7em">${T(st.exprT)}</div>` : '';
+const exprHTML = (st, cls) => st.expr ? `<div class="expr ${cls}">${M(st.expr)}</div>` : st.exprT ? `<div class="expr ${cls}" style="font-size:.85em">${T(st.exprT)}</div>` : '';
 const tableHTML = st => st.table ? `<table class="table"><thead><tr>${st.table.head.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${st.table.rows.map(r => `<tr>${r.map(c => `<td>${M(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '';
 
 function chartHTML(r, title) {
@@ -507,7 +515,9 @@ async function resumeSession() {
     startTeacher(t.code);
   } catch (e) { renderLanding('Could not reach Firebase.', true); }
 }
+function setScale(v) { v = Math.min(1.5, Math.max(.875, v)); ls.set('expdisc:scale', v); document.documentElement.style.fontSize = (16 * v) + 'px'; }
 function startTeacher(code) {
+  setScale(ls.get('expdisc:scale') || 1);
   S.role = 'teacher'; S.code = code; S.watchIdx = -1;
   watch('state', `${base()}/state`, st => {
     if (!st) return;
@@ -549,6 +559,7 @@ function renderTeacher() {
       <div class="brand">Exponent Properties</div>
       <div class="join">Join at <span class="url">${esc(joinURL())}</span> with code <span class="code">${esc(S.code)}</span></div>
       <div class="t-tools"><span class="pill" id="joined"></span>
+        <button class="ghost" data-act="smaller" aria-label="Smaller text">A−</button><button class="ghost" data-act="bigger" aria-label="Larger text">A+</button>
         <button class="ghost" data-act="names">Names: ${S.showNames ? 'shown' : 'hidden'}</button>
         <button class="ghost" data-act="notes">${S.notes ? 'Hide notes' : 'Notes'}</button>
         <button class="ghost danger" data-act="end">End session</button></div>
@@ -700,6 +711,7 @@ document.addEventListener('click', async e => {
   if (a === 'pick') return pick(b.dataset.i);
   if (a === 'leave') { unwatchAll(); ls.del('expdisc:student'); S.role = null; S.ended = false; return renderLanding(); }
   if (S.role !== 'teacher') return;
+  if (a === 'bigger' || a === 'smaller') { setScale((ls.get('expdisc:scale') || 1) + (a === 'bigger' ? .125 : -.125)); return; }
   if (a === 'names') { S.showNames = !S.showNames; return renderTeacher(); }
   if (a === 'notes') { S.notes = !S.notes; return renderTeacher(); }
   if (a === 'back' && S.idx > 0) return setState(S.idx - 1, false);
@@ -711,7 +723,7 @@ document.addEventListener('click', async e => {
   }
   if (a === 'end') {
     if (!confirm('End this session and delete all responses?')) return;
-    await DB.remove(base()); unwatchAll(); ls.del('expdisc:teacher'); S.role = null; renderLanding('Session ended.', true);
+    await DB.remove(base()); unwatchAll(); ls.del('expdisc:teacher'); document.documentElement.style.fontSize = ''; S.role = null; renderLanding('Session ended.', true);
   }
 });
 document.addEventListener('input', e => {
