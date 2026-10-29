@@ -261,12 +261,37 @@ const ROUNDS = [
       example: 'x^5 / x^2 = x^3', why: '(x*x*x*x*x) / (x*x) = x*x*x' }] }
 ];
 
-const PHASE = { expand: 'Expand it', notice: 'Spot the pattern', predict: 'Predict it', stress: 'Stress test', rule: 'Your rule', info: '' };
+const PHASE = { warm: 'Quick check', expand: 'Expand it', notice: 'Spot the pattern', predict: 'Predict it', stress: 'Stress test', rule: 'Your rule', info: '' };
 
 const STEPS = [
   { r: 0, type: 'info', phase: 'info', title: 'Today you discover the exponent properties',
-    body: 'Nobody hands you the rules today. For each property we will <b>expand</b> some examples, <b>spot the pattern</b>, <b>predict</b> a new one, <b>stress test</b> it, and then <b>write the rule in your own words</b>. Type your answers on your device. Your teacher reveals each one together.',
+    body: 'Nobody hands you the rules today. For each property we will <b>expand</b> some examples, <b>spot the pattern</b>, <b>predict</b> a new one, <b>stress test</b> it, and then <b>write the rule in your own words</b>. Type your answers on your device. Your teacher reveals each one together. First, a quick warm-up from middle school.',
     note: 'Have students join with the code. Remind them: first name only.' },
+
+  /* ---------- Warm-up: Remember middle school? ---------- */
+  { r: 0, type: 'num', phase: 'warm', expr: '2*2*2*2*2',
+    q: 'Remember middle school? Repeated multiplication can be written with an exponent. Write this as one power.',
+    fields: [{ pre: '= 2', sup: true, ans: 5 }],
+    expanded: '2*2*2*2*2 = 2^5', explain: 'Five $2$’s multiplied together is $2^5$. The exponent counts how many times the base is used as a factor.',
+    note: 'Quick pulse check. If most of the class has this, keep the pace brisk.' },
+  { r: 0, type: 'num', phase: 'warm', expr: 'x*x*x*x',
+    q: 'Same idea with a variable. Write this as one power.',
+    fields: [{ pre: '= x', sup: true, ans: 4 }],
+    expanded: 'x*x*x*x = x^4', explain: 'Four $x$’s multiplied together is $x^4$.' },
+  { r: 0, type: 'num', phase: 'warm', expr: '5^3',
+    q: 'Now go the other way. Write $5^3$ as repeated multiplication, then find its value.',
+    fields: [{ pre: '5^3 =', ans: 125 }],
+    expanded: '5^3 = 5*5*5 = 125', explain: '$5^3$ means $5 · 5 · 5 = 125$. If you got 15, you multiplied the base by the exponent ($5 · 3$).',
+    note: 'The most common error is 15 (base times exponent). If many students land there, spend a minute here before moving on.' },
+  { r: 0, type: 'mc', phase: 'warm', exprT: '$4^3$',
+    q: 'Which of these is the same as $4^3$?',
+    options: ['$4 · 3$', '$4 · 4 · 4$', '$3 · 3 · 3 · 3$', '$4 + 4 + 4$'], ans: 1,
+    explain: '$4^3$ is three $4$’s multiplied: $4 · 4 · 4 = 64$. Both $4 · 3$ and $4 + 4 + 4$ equal 12, which is a different thing.' },
+  { r: 0, type: 'mc', phase: 'warm', expr: 'x^6',
+    q: 'In $x^6$, what does the 6 tell us?',
+    options: ['Multiply $x$ by 6', '$x$ appears as a factor 6 times', 'Add 6 copies of $x$'], ans: 1,
+    explain: 'The exponent counts the factors. Today we use two moves over and over: <b>expand</b> an exponent into repeated multiplication, and <b>compress</b> repeated multiplication back into an exponent.',
+    note: 'Name the two moves out loud: expand and compress. Round 1 starts right after this.' },
 
   /* ---------- Round 1: product of powers ---------- */
   { r: 1, type: 'num', phase: 'expand', expr: '2^3 * 2^4',
@@ -421,7 +446,7 @@ function isCorrect(st, v) {
 /* =====================================================================
    6. SHARED RENDER PIECES
    ===================================================================== */
-const chip = st => st.r > 0 && st.r < 5 ? `<span class="pill">Round ${st.r}: ${esc(ROUNDS[st.r].name)}</span> ${st.phase !== 'info' ? `<span class="pill phase">${PHASE[st.phase]}</span>` : ''}` : `<span class="pill">${st.r === 0 ? 'Welcome' : 'Wrap-up'}</span>`;
+const chip = st => st.phase === 'warm' ? `<span class="pill">Warm-up: Remember middle school?</span> <span class="pill phase">${PHASE.warm}</span>` : st.r > 0 && st.r < 5 ? `<span class="pill">Round ${st.r}: ${esc(ROUNDS[st.r].name)}</span> ${st.phase !== 'info' ? `<span class="pill phase">${PHASE[st.phase]}</span>` : ''}` : `<span class="pill">${st.r === 0 ? 'Welcome' : 'Wrap-up'}</span>`;
 const exprHTML = (st, cls) => st.expr ? `<div class="expr ${cls}">${M(st.expr)}</div>` : st.exprT ? `<div class="expr ${cls}" style="font-size:.85em">${T(st.exprT)}</div>` : '';
 const tableHTML = st => st.table ? `<table class="table"><thead><tr>${st.table.head.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${st.table.rows.map(r => `<tr>${r.map(c => `<td>${M(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '';
 
