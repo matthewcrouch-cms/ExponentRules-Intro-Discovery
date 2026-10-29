@@ -54,6 +54,7 @@ h1,h2,h3,p{margin:0}
 .fields{display:flex; flex-wrap:wrap; gap:10px 28px; align-items:center; font-family:var(--math); font-size:2rem; margin:12px 0 6px}
 .fld{white-space:nowrap}
 input.num{font:600 1.15rem var(--ui); width:3.2em; padding:8px 6px; text-align:center; border:2px solid var(--line); border-radius:9px; background:var(--card); color:var(--ink); margin-left:3px}
+input.num.str{width:9em; text-align:left; padding-left:12px}
 input.num.sup{position:relative; top:-.9rem; width:2.9em}
 input.num:focus{border-color:var(--blue); outline:none}
 input.num[disabled]{background:transparent; opacity:.85}
@@ -293,10 +294,10 @@ const STEPS = [
     fields: [{ pre: '= x', sup: true, ans: 4 }],
     expanded: 'x*x*x*x = x^4', explain: 'Four $x$’s multiplied together is $x^4$.' },
   { r: 0, type: 'num', phase: 'warm', expr: '5^3',
-    q: 'Now go the other way. Write $5^3$ as repeated multiplication, then find its value.',
-    fields: [{ pre: '5^3 =', ans: 125 }],
-    expanded: '5^3 = 5*5*5 = 125', explain: '$5^3$ means $5 · 5 · 5 = 125$. If you got 15, you multiplied the base by the exponent ($5 · 3$).',
-    note: 'The most common error is 15 (base times exponent). If many students land there, spend a minute here before moving on.' },
+    q: 'Now go the other way. Write $5^3$ as repeated multiplication. Type it with <b>*</b> for multiply. For example, $3^2$ would be <b>3*3</b>.',
+    fields: [{ pre: '5^3 =', str: true, ans: '5*5*5', ph: 'use *' }],
+    expanded: '5^3 = 5*5*5 = 125', explain: '$5^3$ means three $5$’s multiplied: $5 · 5 · 5$, which equals 125. A common slip is $5 · 3 = 15$, which multiplies the base by the exponent.',
+    note: 'Correct answer: 5*5*5 (spaces, × and x between numbers are accepted). The common error is 5*3, which means base times exponent. If many students land there, spend a minute here.' },
   { r: 0, type: 'mc', phase: 'warm', exprT: '$4^3$',
     q: 'Which of these is the same as $4^3$?',
     options: ['$4 · 3$', '$4 · 4 · 4$', '$3 · 3 · 3 · 3$', '$4 + 4 + 4$'], ans: 1,
@@ -309,7 +310,7 @@ const STEPS = [
 
   /* ---------- Round 1: product of powers ---------- */
   { r: 1, type: 'num', phase: 'expand', expr: '2^3 * 2^4',
-    q: 'Write it out as repeated multiplication. How many $2$’s are multiplied altogether? Write the product as one power.',
+    q: 'On paper, write it out as repeated multiplication. How many $2$’s are multiplied altogether? Write the product as one power.',
     fields: [{ pre: '= 2', sup: true, ans: 7 }],
     expanded: '(2*2*2) * (2*2*2*2) = 2*2*2*2*2*2*2', explain: 'Three $2$’s times four $2$’s makes seven $2$’s in a row, so $2^7$.',
     note: 'Let students expand on paper first. Cold-call someone to show the expanded form.' },
@@ -372,11 +373,11 @@ const STEPS = [
 
   /* ---------- Round 3: power of a product / quotient ---------- */
   { r: 3, type: 'num', phase: 'expand', expr: '(xy)^3',
-    q: 'Write out three copies of $(xy)$. Rewrite the result as $x$ to a power times $y$ to a power.',
+    q: 'On paper, write out three copies of $(xy)$. Rewrite the result as $x$ to a power times $y$ to a power.',
     fields: [{ pre: '= x', sup: true, ans: 3 }, { pre: '· y', sup: true, ans: 3 }],
     expanded: '(xy)(xy)(xy) = (x*x*x)(y*y*y)', explain: 'Three $x$’s and three $y$’s: $x^3 y^3$.' },
   { r: 3, type: 'num', phase: 'expand', expr: '(2x)^4',
-    q: 'Write out four copies of $(2x)$. Rewrite as $2$ to a power times $x$ to a power.',
+    q: 'On paper, write out four copies of $(2x)$. Rewrite as $2$ to a power times $x$ to a power.',
     fields: [{ pre: '= 2', sup: true, ans: 4 }, { pre: '· x', sup: true, ans: 4 }],
     expanded: '(2x)(2x)(2x)(2x) = (2*2*2*2)(x*x*x*x)', explain: 'Four $2$’s and four $x$’s: $2^4 x^4$, which is $16x^4$.' },
   { r: 3, type: 'num', phase: 'expand', exprT: 'Check with numbers: $2^2 · 3^2 =$',
@@ -384,7 +385,7 @@ const STEPS = [
     fields: [{ pre: '2^2 * 3^2 =', ans: 36 }],
     explain: '$4 · 9 = 36$ and $6^2 = 36$. The same! Splitting the product before applying the power gives the same value.' },
   { r: 3, type: 'num', phase: 'expand', expr: '(x/y)^3',
-    q: 'Write out three copies of $(x/y)$. Rewrite as one fraction with powers on top and bottom.',
+    q: 'On paper, write out three copies of $(x/y)$. Rewrite as one fraction with powers on top and bottom.',
     fields: [{ pre: '= x', sup: true, ans: 3 }, { pre: '/ y', sup: true, ans: 3 }],
     expanded: '(x/y)(x/y)(x/y) = (x*x*x) / (y*y*y)', explain: 'Three $x$’s on top and three $y$’s on the bottom: $x^3 / y^3$.' },
   { r: 3, type: 'text', phase: 'notice', title: 'What do you notice?',
@@ -406,7 +407,7 @@ const STEPS = [
 
   /* ---------- Round 4: quotient of powers ---------- */
   { r: 4, type: 'num', phase: 'expand', expr: 'x^5 / x^2',
-    q: 'Write out every factor and cancel matching pairs. How many $x$’s are left?',
+    q: 'On paper, write out every factor and cancel matching pairs. How many $x$’s are left?',
     fields: [{ pre: '= x', sup: true, ans: 3 }],
     expanded: '(x*x*x*x*x) / (x*x) = x*x*x', explain: 'Two pairs cancel, leaving three $x$’s on top: $x^3$.' },
   { r: 4, type: 'num', phase: 'expand', expr: '7^6 / 7^4',
@@ -445,6 +446,7 @@ const unsubs = {};
 function watch(key, path, cb) { if (unsubs[key]) unsubs[key](); unsubs[key] = DB.on(path, cb); }
 function unwatchAll() { Object.keys(unsubs).forEach(k => { unsubs[k](); delete unsubs[k]; }); }
 const ls = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => localStorage.setItem(k, JSON.stringify(v)), del: k => localStorage.removeItem(k) };
+const normStr = x => String(x).toLowerCase().replace(/\s+/g, '').replace(/[×·⋅✕]/g, '*').replace(/(\d)x(?=\d)/g, '$1*');
 const rid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-3);
 const genCode = () => Array.from({ length: 4 }, () => 'BCDFGHJKMNPQRSTVWXZ'[Math.floor(Math.random() * 19)]).join('');
 const joinURL = () => location.href.split('#')[0].split('?')[0];
@@ -483,7 +485,7 @@ const recapHTML = () => [1, 2, 3, 4].map(r => chartHTML(r, `Round ${r}`)).join('
 function fieldsHTML(st, vals, disabled) {
   const parts = String(vals == null ? '' : vals).split('|');
   return `<div class="fields">` + st.fields.map((f, i) =>
-    `<span class="fld">${f.pre ? M(f.pre) : ''}<input class="num${f.sup ? ' sup' : ''}" data-i="${i}" inputmode="numeric" autocomplete="off" aria-label="Answer ${i + 1}" placeholder="?" value="${esc(parts[i] || '')}" ${disabled ? 'disabled' : ''}>${f.post ? M(f.post) : ''}</span>`).join('') + `</div>`;
+    `<span class="fld">${f.pre ? M(f.pre) : ''}<input class="num${f.sup ? ' sup' : ''}${f.str ? ' str' : ''}" data-i="${i}" inputmode="${f.str ? 'text' : 'numeric'}" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Answer ${i + 1}" placeholder="${esc(f.ph || '?')}" value="${esc(parts[i] || '')}" ${disabled ? 'disabled' : ''}>${f.post ? M(f.post) : ''}</span>`).join('') + `</div>`;
 }
 function optsHTML(st, sel, locked) {
   return `<div class="opts">` + st.options.map((o, i) => {
@@ -727,8 +729,8 @@ async function submit() {
   if (S.revealed) return;
   if (st.type === 'num') {
     const vals = [...document.querySelectorAll('.num')].map(i => i.value.trim());
-    if (vals.some(x => x === '' || isNaN(Number(x)))) return err('Enter a number in every box.');
-    v = vals.map(x => String(Number(x))).join('|');
+    if (vals.some((x, i) => x === '' || (!st.fields[i].str && isNaN(Number(x))))) return err(st.fields.some(f => f.str) ? 'Fill in the box. Use * for multiply.' : 'Enter a number in every box.');
+    v = vals.map((x, i) => st.fields[i].str ? normStr(x) : String(Number(x))).join('|');
   } else {
     v = ($('.txt').value || '').trim().slice(0, 300);
     if (!v) return err('Type your idea first.');
