@@ -84,6 +84,14 @@ textarea.txt:focus,input.txt:focus{border-color:var(--blue); outline:none}
 .ideas{margin-top:16px}
 .ideas h3{font-size:1rem; color:var(--muted); margin-bottom:8px}
 .ideas blockquote{margin:0 0 8px; padding:9px 14px; border-left:4px solid var(--blue); background:var(--blue-soft); border-radius:0 9px 9px 0}
+.moves{list-style:none; margin:16px 0; padding:0; display:grid; gap:10px}
+.moves li{display:flex; gap:14px; align-items:center; padding:11px 16px; border:1.5px solid var(--line); border-radius:12px; background:var(--card)}
+.moves .n{flex:none; width:2.3rem; height:2.3rem; border-radius:50%; display:grid; place-items:center; background:var(--blue-soft); color:var(--blue-d); border:2px solid var(--blue); font-weight:700}
+.moves b{display:block; font-size:1.18em}
+.moves .t{display:block; color:var(--muted)}
+.info-foot{margin-top:14px; color:var(--muted)}
+.stage .moves{font-size:1.45rem; gap:12px}
+.stage .moves .n{width:3rem; height:3rem; font-size:1.3rem}
 .err{color:var(--bad); font-weight:600; min-height:1.4em; margin-top:8px}
 .ok{color:var(--good); font-weight:600; margin-top:8px}
 
@@ -265,7 +273,13 @@ const PHASE = { warm: 'Quick check', expand: 'Expand it', notice: 'Spot the patt
 
 const STEPS = [
   { r: 0, type: 'info', phase: 'info', title: 'Today you discover the exponent properties',
-    body: 'Nobody hands you the rules today. For each property we will <b>expand</b> some examples, <b>spot the pattern</b>, <b>predict</b> a new one, <b>stress test</b> it, and then <b>write the rule in your own words</b>. Type your answers on your device. Your teacher reveals each one together. First, a quick warm-up from middle school.',
+    body: 'Nobody hands you the rules today. For each property, we go through the same five moves:',
+    list: [['Expand', 'Write the exponents out as repeated multiplication.'],
+           ['Spot the pattern', 'Describe what you notice, in your own words.'],
+           ['Predict', 'Use your pattern on a brand-new problem.'],
+           ['Stress test', 'Find out when the pattern breaks.'],
+           ['Write the rule', 'Say the property in your own words.']],
+    foot: 'Type your answers on your device. Your teacher reveals each one together. <b>First, a quick warm-up from middle school.</b>',
     note: 'Have students join with the code. Remind them: first name only.' },
 
   /* ---------- Warm-up: Remember middle school? ---------- */
@@ -448,6 +462,12 @@ function isCorrect(st, v) {
    ===================================================================== */
 const chip = st => st.phase === 'warm' ? `<span class="pill">Warm-up: Remember middle school?</span> <span class="pill phase">${PHASE.warm}</span>` : st.r > 0 && st.r < 5 ? `<span class="pill">Round ${st.r}: ${esc(ROUNDS[st.r].name)}</span> ${st.phase !== 'info' ? `<span class="pill phase">${PHASE[st.phase]}</span>` : ''}` : `<span class="pill">${st.r === 0 ? 'Welcome' : 'Wrap-up'}</span>`;
 const exprHTML = (st, cls) => st.expr ? `<div class="expr ${cls}">${M(st.expr)}</div>` : st.exprT ? `<div class="expr ${cls}" style="font-size:.85em">${T(st.exprT)}</div>` : '';
+function infoHTML(st, cls) {
+  let h = `<p class="${cls}">${st.body}</p>`;
+  if (st.list) h += `<ol class="moves">${st.list.map((it, i) => `<li><span class="n">${i + 1}</span><div><b>${esc(it[0])}</b><span class="t">${esc(it[1])}</span></div></li>`).join('')}</ol>`;
+  if (st.foot) h += `<p class="${cls} info-foot">${st.foot}</p>`;
+  return h;
+}
 const tableHTML = st => st.table ? `<table class="table"><thead><tr>${st.table.head.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${st.table.rows.map(r => `<tr>${r.map(c => `<td>${M(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '';
 
 function chartHTML(r, title) {
@@ -563,7 +583,7 @@ function renderTeacher() {
   const st = STEPS[S.idx], total = STEPS.length;
   let stage = `<div>${chip(st)}</div>`;
   if (st.type === 'info') {
-    stage += `<h2 class="t-title" style="font-size:2.2rem">${esc(st.title)}</h2><p class="t-q">${st.body}</p>${st.recap ? recapHTML() : ''}`;
+    stage += `<h2 class="t-title" style="font-size:2.2rem">${esc(st.title)}</h2>${infoHTML(st, 't-q')}${st.recap ? recapHTML() : ''}`;
   } else {
     if (st.title) stage += `<h2 class="t-title">${esc(st.title)}</h2>`;
     stage += exprHTML(st, 't-expr') + tableHTML(st);
@@ -676,7 +696,7 @@ function renderStudent() {
   const st = STEPS[S.idx], mineV = S.mine ? S.mine.v : null, shown = S.draft[S.idx] != null ? S.draft[S.idx] : mineV;
   let body = '';
   if (st.type === 'info') {
-    body = `<h2 class="s-title">${esc(st.title)}</h2><p class="s-q">${st.body}</p>${st.recap ? recapHTML() : ''}`;
+    body = `<h2 class="s-title">${esc(st.title)}</h2>${infoHTML(st, 's-q')}${st.recap ? recapHTML() : ''}`;
   } else {
     if (st.title) body += `<h2 class="s-title">${esc(st.title)}</h2>`;
     body += exprHTML(st, 's-expr') + tableHTML(st) + `<p class="s-q">${T(st.q)}</p>`;
