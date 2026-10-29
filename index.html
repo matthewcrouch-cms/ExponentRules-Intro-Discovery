@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Discover the Exponent Properties</title>
+<style>
+:root{
+  --paper:#f7f9fc; --grid:#e3eaf3; --card:#ffffff; --ink:#14233a; --muted:#566883; --line:#d5deea;
+  --blue:#4B9CD3; --blue-d:#1d6aa5; --blue-soft:#e6f2fa; --orange:#F56600; --orange-soft:#fff0e5;
+  --good:#17805a; --good-soft:#e2f5ec; --bad:#b83a2b; --bad-soft:#fbeae7;
+  --math:"Cambria Math","STIX Two Text","Latin Modern Math",Cambria,Georgia,"Times New Roman",serif;
+  --ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#0f1824; --grid:#17263a; --card:#16222f; --ink:#e8eef7; --muted:#9db0c8; --line:#2b3d55;
+    --blue:#6bb3e3; --blue-d:#8cc6ee; --blue-soft:#183249; --orange:#ff8a3d; --orange-soft:#3a2415;
+    --good:#4fcf9b; --good-soft:#12352a; --bad:#ff8c7d; --bad-soft:#3a1c18; color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:var(--ui); color:var(--ink); background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px; line-height:1.45; -webkit-text-size-adjust:100%;
+}
+.math{font-family:var(--math); white-space:nowrap}
+.math i{font-style:italic}
+sup{font-size:.62em; line-height:0}
+button{font:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--orange); outline-offset:2px}
+h1,h2,h3,p{margin:0}
+
+/* ---------- shared ---------- */
+.card{background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:20px}
+.pill{display:inline-block; font-size:.82rem; font-weight:600; padding:3px 11px; border-radius:99px; background:var(--blue-soft); color:var(--blue-d)}
+.pill.phase{background:var(--orange-soft); color:var(--orange)}
+.btn{border:0; border-radius:10px; padding:11px 20px; font-weight:650; background:var(--blue-d); color:#fff}
+.btn:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.45; cursor:not-allowed}
+.btn.alt{background:var(--orange); color:#fff}
+.btn.ghost,.ghost{background:transparent; color:var(--ink); border:1.5px solid var(--line); border-radius:10px; padding:8px 14px; font-weight:600}
+.ghost:hover{border-color:var(--blue)}
+.ghost.danger{color:var(--bad)}
+.banner{background:var(--orange-soft); border:1.5px solid var(--orange); color:var(--ink); border-radius:10px; padding:9px 14px; font-size:.9rem; margin-bottom:14px}
+.expr{font-family:var(--math); line-height:1.25; white-space:normal}
+.table{border-collapse:collapse; margin:14px 0; font-size:1.5rem}
+.table th{font:600 .85rem var(--ui); color:var(--muted); text-align:left; padding:4px 22px 6px 0}
+.table td{padding:8px 22px 8px 0; border-top:1px solid var(--line)}
+.fields{display:flex; flex-wrap:wrap; gap:10px 28px; align-items:center; font-family:var(--math); font-size:2rem; margin:12px 0 6px}
+.fld{white-space:nowrap}
+input.num{font:600 1.15rem var(--ui); width:3.2em; padding:8px 6px; text-align:center; border:2px solid var(--line); border-radius:9px; background:var(--card); color:var(--ink); margin-left:3px}
+input.num.sup{position:relative; top:-.9rem; width:2.9em}
+input.num:focus{border-color:var(--blue); outline:none}
+input.num[disabled]{background:transparent; opacity:.85}
+textarea.txt,input.txt{width:100%; font:1.05rem var(--ui); padding:12px; border:2px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink)}
+textarea.txt{min-height:104px; resize:vertical}
+textarea.txt:focus,input.txt:focus{border-color:var(--blue); outline:none}
+.opts{display:grid; gap:10px; margin:12px 0}
+.opt{display:flex; gap:12px; align-items:center; text-align:left; width:100%; padding:13px 16px; border:2px solid var(--line); border-radius:12px; background:var(--card); color:var(--ink); font-size:1.12rem}
+.opt b{flex:none; width:1.9rem; height:1.9rem; border-radius:50%; display:grid; place-items:center; background:var(--blue-soft); color:var(--blue-d); font-size:.9rem}
+.opt:hover:not([disabled]){border-color:var(--blue)}
+.opt.sel{border-color:var(--blue-d); background:var(--blue-soft)}
+.opt.right{border-color:var(--good); background:var(--good-soft)}
+.opt.wrong{border-color:var(--bad); background:var(--bad-soft)}
+.opt[disabled]{cursor:default}
+.expanded{margin:16px 0 6px; padding:14px 16px; border-left:5px solid var(--orange); background:var(--orange-soft); border-radius:0 10px 10px 0; font-size:1.45rem; overflow-x:auto}
+.expanded .lbl,.chart-h{font:700 .85rem var(--ui); color:var(--orange); margin-bottom:4px}
+.explain{margin:12px 0; font-size:1.08rem}
+.verdict{border-radius:10px; padding:10px 14px; font-weight:650; margin:14px 0 4px}
+.verdict.good{background:var(--good-soft); color:var(--good)}
+.verdict.bad{background:var(--bad-soft); color:var(--bad)}
+.verdict.none{background:var(--blue-soft); color:var(--blue-d)}
+.chart{margin-top:18px; border:2px solid var(--orange); border-radius:12px; padding:14px 16px; background:var(--card)}
+.chart-row{display:grid; grid-template-columns:1.1fr 1.3fr 1.1fr 1.5fr; gap:8px 18px; padding:12px 0; border-top:1px solid var(--line)}
+.chart-row:first-of-type{border-top:0}
+.chart-row>div>span{display:block; font:600 .78rem var(--ui); color:var(--muted); margin-bottom:3px}
+.chart-row .prop{font-weight:700}
+.chart-row .math{white-space:normal; font-size:1.18rem}
+.ideas{margin-top:16px}
+.ideas h3{font-size:1rem; color:var(--muted); margin-bottom:8px}
+.ideas blockquote{margin:0 0 8px; padding:9px 14px; border-left:4px solid var(--blue); background:var(--blue-soft); border-radius:0 9px 9px 0}
+.err{color:var(--bad); font-weight:600; min-height:1.4em; margin-top:8px}
+.ok{color:var(--good); font-weight:600; margin-top:8px}
+
+/* ---------- landing ---------- */
+.landing{max-width:520px; margin:0 auto; padding:9vh 18px 40px}
+.landing h1{font:700 clamp(1.9rem,6vw,2.6rem)/1.15 var(--math); margin-bottom:8px}
+.landing .sub{color:var(--muted); margin-bottom:22px}
+.landing label{display:block; font-weight:600; margin:14px 0 6px}
+.landing .row{display:flex; gap:12px; margin-top:20px; align-items:center; flex-wrap:wrap}
+.code-in{text-transform:uppercase; letter-spacing:.35em; font-weight:700; text-align:center}
+.teacher-link{margin-top:26px; font-size:.92rem; color:var(--muted)}
+.teacher-link button{background:none; border:0; color:var(--blue-d); text-decoration:underline; padding:0}
+
+/* ---------- student ---------- */
+.s-wrap{max-width:720px; margin:0 auto; padding:14px 14px 80px}
+.s-top{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap}
+.s-top .who{color:var(--muted); font-size:.92rem}
+.s-top .who button{background:none; border:0; color:var(--muted); text-decoration:underline; padding:0 0 0 8px; font-size:.85rem}
+.s-expr{font-size:clamp(2rem,9vw,3.4rem); margin:8px 0 12px}
+.s-q{font-size:1.15rem; margin-bottom:6px}
+.s-title{font:700 1.6rem var(--math); margin:6px 0 10px}
+
+/* ---------- teacher ---------- */
+.t-wrap{max-width:1500px; margin:0 auto; padding:14px 18px 110px}
+.t-top{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:14px}
+.brand{font:700 1.25rem var(--math)}
+.join{font-size:1.02rem}
+.join .code{font:700 1.5rem var(--ui); letter-spacing:.2em; background:var(--orange); color:#fff; padding:2px 12px; border-radius:8px; margin-left:4px}
+.join .url{font-weight:650; color:var(--blue-d)}
+.t-tools{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.t-grid{display:grid; grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr); gap:16px; align-items:start}
+.stage{min-height:56vh; padding:24px 28px}
+.t-title{font:700 1.5rem var(--math); margin:10px 0 6px}
+.t-expr{font-size:clamp(2.6rem,6vw,5rem); margin:10px 0 14px}
+.t-q{font-size:1.4rem; max-width:44rem}
+.stage .fields{font-size:2.3rem}
+.results h3{font-size:1.05rem; margin-bottom:10px}
+.rhead{font-size:1.02rem; margin-bottom:12px}
+.rhead b{font-size:1.6rem}
+.bar{display:grid; grid-template-columns:minmax(4rem,9rem) 1fr 2.2rem; gap:10px; align-items:center; margin:7px 0}
+.bar .lab{font-size:1.2rem; text-align:right}
+.bar .track{height:26px; background:var(--blue-soft); border-radius:7px; overflow:hidden}
+.bar .fill{height:100%; background:var(--blue); transition:width .35s; min-width:3px}
+.bar.right .fill{background:var(--good)}
+.bar.right .lab{color:var(--good); font-weight:700}
+.bar .n{font-weight:700}
+.idea{display:flex; gap:10px; align-items:flex-start; border:1.5px solid var(--line); border-radius:10px; padding:9px 12px; margin-bottom:8px; background:var(--card)}
+.idea.star{border-color:var(--orange); background:var(--orange-soft)}
+.idea p{flex:1; font-size:1.05rem}
+.idea small{display:block; color:var(--muted); font-weight:600}
+.idea button{border:0; background:none; font-size:1.5rem; line-height:1; color:var(--muted); padding:0 4px}
+.idea.star button{color:var(--orange)}
+.scroll{max-height:62vh; overflow:auto}
+.notes{margin-top:16px; border-style:dashed}
+.notes h3{font-size:1rem; margin-bottom:6px}
+.t-foot{position:fixed; left:0; right:0; bottom:0; background:var(--card); border-top:1.5px solid var(--line); padding:10px 18px; display:flex; align-items:center; gap:12px; justify-content:center; flex-wrap:wrap}
+.t-foot .prog{flex:1 1 220px; max-width:420px; font-size:.85rem; color:var(--muted)}
+.prog .meter{height:8px; background:var(--blue-soft); border-radius:99px; overflow:hidden; margin-top:4px}
+.prog .meter span{display:block; height:100%; background:var(--blue-d)}
+.kbd{font-size:.78rem; color:var(--muted)}
+
+@media (max-width:900px){
+  .t-grid{grid-template-columns:1fr}
+  .chart-row{grid-template-columns:1fr}
+  .stage{padding:18px}
+}
+@media (prefers-reduced-motion:reduce){ .bar .fill{transition:none} }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+/* =====================================================================
+   1. FIREBASE SETUP
+   Paste your project's web-app config here (see setup steps).
+   Leave databaseURL empty to run in PRACTICE MODE: the teacher view and
+   student view then sync between two tabs of the same browser only.
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDkuZVoCbhVotMLGi_iI8wGYCrRKie8ex8",
+  authDomain: "exponentproperties-7198b.firebaseapp.com",
+  databaseURL: "https://exponentproperties-7198b-default-rtdb.firebaseio.com",
+  projectId: "exponentproperties-7198b",
+  appId: "1:189445254765:web:3e6f1c783f9b6fdfa85964"
+};
+
+/* =====================================================================
+   2. TINY DATABASE LAYER (Firebase, or localStorage for practice mode)
+   ===================================================================== */
+const DB = (() => {
+  const live = !!FIREBASE_CONFIG.databaseURL && typeof firebase !== 'undefined';
+  if (live) {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const fdb = firebase.database();
+    return {
+      mode: 'live',
+      set: (p, v) => fdb.ref(p).set(v),
+      remove: p => fdb.ref(p).remove(),
+      once: p => fdb.ref(p).once('value').then(s => s.val()),
+      on: (p, cb) => { const r = fdb.ref(p); const h = r.on('value', s => cb(s.val())); return () => r.off('value', h); }
+    };
+  }
+  const KEY = 'expdisc:tree', subs = [];
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  const get = (t, p) => { const v = p.split('/').reduce((o, k) => (o == null ? null : o[k]), t); return v === undefined ? null : v; };
+  const clone = v => (v == null ? null : JSON.parse(JSON.stringify(v)));
+  const notify = () => { const t = read(); subs.slice().forEach(s => s.cb(clone(get(t, s.p)))); };
+  window.addEventListener('storage', e => { if (e.key === KEY) notify(); });
+  function write(p, v) {
+    const t = read(), ks = p.split('/'); let o = t;
+    ks.slice(0, -1).forEach(k => { if (typeof o[k] !== 'object' || o[k] === null) o[k] = {}; o = o[k]; });
+    if (v === null) delete o[ks[ks.length - 1]]; else o[ks[ks.length - 1]] = v;
+    localStorage.setItem(KEY, JSON.stringify(t)); notify();
+  }
+  return {
+    mode: 'local',
+    set: (p, v) => { write(p, clone(v)); return Promise.resolve(); },
+    remove: p => { write(p, null); return Promise.resolve(); },
+    once: p => Promise.resolve(clone(get(read(), p))),
+    on: (p, cb) => { const s = { p, cb }; subs.push(s); setTimeout(() => { if (subs.includes(s)) cb(clone(get(read(), p))); }, 0); return () => { const i = subs.indexOf(s); if (i >= 0) subs.splice(i, 1); }; }
+  };
+})();
+
+/* =====================================================================
+   3. MATH FORMATTING HELPERS
+   M("x^3 * x^4")  ->  italic variables, superscripts, centered dot.
+   T("How many $2$'s?") -> text with inline math between $...$.
+   ===================================================================== */
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function M(s) {
+  let t = esc(s);
+  t = t.replace(/[a-z]/g, c => `<i>${c}</i>`);
+  t = t.replace(/\^(\{[^}]*\}|<i>[a-z]<\/i>|-?\d+)/g, (m, g) => '<sup>' + g.replace(/^\{|\}$/g, '') + '</sup>');
+  t = t.replace(/\*/g, '·');
+  return `<span class="math">${t}</span>`;
+}
+const T = s => String(s).replace(/\$([^$]+)\$/g, (m, g) => M(g));
+const $ = (s, r = document) => r.querySelector(s);
+
+/* =====================================================================
+   4. LESSON CONTENT
+   Each round: expand x3 -> notice -> predict -> stress test -> rule.
+   ===================================================================== */
+const ROUNDS = [
+  null,
+  { name: 'Product of powers', chart: [{
+      prop: 'Product of powers', alg: 'a^m * a^n = a^{m+n}',
+      words: 'Same base: keep the base and add the exponents.',
+      example: 'x^3 * x^4 = x^7', why: '(x*x*x) * (x*x*x*x) = x*x*x*x*x*x*x' }] },
+  { name: 'Power of a power', chart: [{
+      prop: 'Power of a power', alg: '(a^m)^n = a^{m*n}',
+      words: 'Raise a power to a power: keep the base and multiply the exponents.',
+      example: '(x^2)^3 = x^6', why: 'x^2 * x^2 * x^2 = x^{2+2+2} = x^6' }] },
+  { name: 'Power of a product and a quotient', chart: [{
+      prop: 'Power of a product', alg: '(a*b)^n = a^n * b^n',
+      words: 'Raise every factor to the power.',
+      example: '(2x)^3 = 2^3 * x^3 = 8x^3', why: '(2x)(2x)(2x) = (2*2*2)(x*x*x)' }, {
+      prop: 'Power of a quotient', alg: '(a/b)^n = a^n / b^n   (b ≠ 0)',
+      words: 'Raise the numerator and the denominator to the power.',
+      example: '(x/y)^3 = x^3 / y^3', why: '(x/y)(x/y)(x/y) = (x*x*x) / (y*y*y)' }] },
+  { name: 'Quotient of powers', chart: [{
+      prop: 'Quotient of powers', alg: 'a^m / a^n = a^{m − n}   (a ≠ 0)',
+      words: 'Same base: keep the base and subtract the exponents (top − bottom).',
+      example: 'x^5 / x^2 = x^3', why: '(x*x*x*x*x) / (x*x) = x*x*x' }] }
+];
+
+const PHASE = { expand: 'Expand it', notice: 'Spot the pattern', predict: 'Predict it', stress: 'Stress test', rule: 'Your rule', info: '' };
+
+const STEPS = [
+  { r: 0, type: 'info', phase: 'info', title: 'Today you discover the exponent properties',
+    body: 'Nobody hands you the rules today. For each property we will <b>expand</b> some examples, <b>spot the pattern</b>, <b>predict</b> a new one, <b>stress test</b> it, and then <b>write the rule in your own words</b>. Type your answers on your device. Your teacher reveals each one together.',
+    note: 'Have students join with the code. Remind them: first name only.' },
+
+  /* ---------- Round 1: product of powers ---------- */
+  { r: 1, type: 'num', phase: 'expand', expr: '2^3 * 2^4',
+    q: 'Write it out as repeated multiplication. How many $2$’s are multiplied altogether? Write the product as one power.',
+    fields: [{ pre: '= 2', sup: true, ans: 7 }],
+    expanded: '(2*2*2) * (2*2*2*2) = 2*2*2*2*2*2*2', explain: 'Three $2$’s times four $2$’s makes seven $2$’s in a row, so $2^7$.',
+    note: 'Let students expand on paper first. Cold-call someone to show the expanded form.' },
+  { r: 1, type: 'num', phase: 'expand', expr: 'x^2 * x^5',
+    q: 'Same idea with a variable. How many $x$’s are multiplied altogether?',
+    fields: [{ pre: '= x', sup: true, ans: 7 }],
+    expanded: '(x*x) * (x*x*x*x*x) = x*x*x*x*x*x*x', explain: 'Two $x$’s and five $x$’s make seven $x$’s: $x^7$.' },
+  { r: 1, type: 'num', phase: 'expand', expr: '3^1 * 3^6',
+    q: 'Careful with this one. How many $3$’s are multiplied altogether?',
+    fields: [{ pre: '= 3', sup: true, ans: 7 }],
+    expanded: '(3) * (3*3*3*3*3*3) = 3*3*3*3*3*3*3', explain: '$3^1$ is just one $3$. One plus six makes seven $3$’s: $3^7$.',
+    note: 'Watch for students who say 6 or 18. $3^1$ is a good moment to say what an exponent of 1 means.' },
+  { r: 1, type: 'text', phase: 'notice', title: 'What do you notice?',
+    table: { head: ['Problem', 'As one power'], rows: [['2^3 * 2^4', '2^7'], ['x^2 * x^5', 'x^7'], ['3^1 * 3^6', '3^7']] },
+    q: 'Look at the exponents in each problem and in each answer. What do you notice? Describe it in your own words.',
+    ph: 'I notice that…',
+    note: 'Listen for “add the exponents.” Star two or three different wordings. Ask why adding makes sense.' },
+  { r: 1, type: 'num', phase: 'predict', expr: 'x^9 * x^6',
+    q: 'Predict without expanding. Write it as one power.',
+    fields: [{ pre: '= x', sup: true, ans: 15 }],
+    explain: 'Add the exponents: $9 + 6 = 15$, so $x^{15}$. Check by expanding: nine $x$’s and six $x$’s make fifteen $x$’s.',
+    note: 'Common wrong answer: 54 (multiplying the exponents). Use the bar chart to ask about it.' },
+  { r: 1, type: 'mc', phase: 'stress', exprT: '$2^3 · 3^4$',
+    q: 'Can this be written as one power? Pick the best answer.',
+    options: ['$6^7$', '$2^7$', 'No single power. The bases are different, so the shortcut does not apply.', '$2^{12}$'], ans: 2,
+    explain: 'Expand it: $(2·2·2)·(3·3·3·3)$. The factors are not all the same, so there is no single base to count. Check: $2^3 · 3^4 = 8 · 81 = 648$, but $6^7 = 279{,}936$. The shortcut needs the <b>same base</b>.',
+    note: 'This surfaces the “same base” condition. Make students say it.' },
+  { r: 1, type: 'text', phase: 'rule', title: 'Write the rule', q: 'Finish the sentence: <b>When you multiply powers that have the same base, you…</b>',
+    ph: 'When you multiply powers that have the same base, you…',
+    note: 'Star the best wording, then build the anchor chart row from it. Reveal shows the reference chart.' },
+
+  /* ---------- Round 2: power of a power ---------- */
+  { r: 2, type: 'num', phase: 'expand', expr: '(2^3)^2',
+    q: 'Rewrite it as $2^3 · 2^3$. How many $2$’s are multiplied altogether?',
+    fields: [{ pre: '= 2', sup: true, ans: 6 }],
+    expanded: '(2*2*2) * (2*2*2) = 2*2*2*2*2*2', explain: '$(2^3)^2$ means two groups of three $2$’s, which is six $2$’s: $2^6$.' },
+  { r: 2, type: 'num', phase: 'expand', expr: '(x^4)^3',
+    q: 'How many $x$’s are multiplied altogether?',
+    fields: [{ pre: '= x', sup: true, ans: 12 }],
+    expanded: '(x*x*x*x) * (x*x*x*x) * (x*x*x*x)', explain: 'Three groups of four $x$’s is twelve $x$’s: $x^{12}$.' },
+  { r: 2, type: 'num', phase: 'expand', expr: '(5^2)^4',
+    q: 'How many $5$’s are multiplied altogether?',
+    fields: [{ pre: '= 5', sup: true, ans: 8 }],
+    expanded: '(5*5) * (5*5) * (5*5) * (5*5)', explain: 'Four groups of two $5$’s is eight $5$’s: $5^8$.' },
+  { r: 2, type: 'text', phase: 'notice', title: 'What do you notice?',
+    table: { head: ['Problem', 'As one power'], rows: [['(2^3)^2', '2^6'], ['(x^4)^3', 'x^12'], ['(5^2)^4', '5^8']] },
+    q: 'How do the two exponents in the problem relate to the exponent in the answer?', ph: 'I notice that…',
+    note: 'Contrast with round 1: this time the exponents are not added. Ask what is different about the problem.' },
+  { r: 2, type: 'num', phase: 'predict', expr: '(x^5)^6',
+    q: 'Predict without expanding. Write it as one power.',
+    fields: [{ pre: '= x', sup: true, ans: 30 }],
+    explain: 'Six groups of five $x$’s: $5 · 6 = 30$, so $x^{30}$. If you got 11, you used the product rule (adding) on a power of a power.',
+    note: 'Expect some 11s. That is the productive mistake.' },
+  { r: 2, type: 'mc', phase: 'stress', exprT: '$(x^2)^3$ &nbsp;and&nbsp; $x^2 · x^3$',
+    q: 'Are these two expressions equal?',
+    options: ['Yes. Both equal $x^5$.', 'Yes. Both equal $x^6$.', 'No. $(x^2)^3 = x^6$ but $x^2 · x^3 = x^5$.', 'No. They are not powers of $x$.'], ans: 2,
+    explain: '$(x^2)^3 = x^2 · x^2 · x^2 = x^6$ (multiply), while $x^2 · x^3 = x^5$ (add). Know which situation you are in.' },
+  { r: 2, type: 'text', phase: 'rule', title: 'Write the rule', q: 'Finish the sentence: <b>When you raise a power to another power, you…</b>',
+    ph: 'When you raise a power to another power, you…' },
+
+  /* ---------- Round 3: power of a product / quotient ---------- */
+  { r: 3, type: 'num', phase: 'expand', expr: '(xy)^3',
+    q: 'Write out three copies of $(xy)$. Rewrite the result as $x$ to a power times $y$ to a power.',
+    fields: [{ pre: '= x', sup: true, ans: 3 }, { pre: '· y', sup: true, ans: 3 }],
+    expanded: '(xy)(xy)(xy) = (x*x*x)(y*y*y)', explain: 'Three $x$’s and three $y$’s: $x^3 y^3$.' },
+  { r: 3, type: 'num', phase: 'expand', expr: '(2x)^4',
+    q: 'Write out four copies of $(2x)$. Rewrite as $2$ to a power times $x$ to a power.',
+    fields: [{ pre: '= 2', sup: true, ans: 4 }, { pre: '· x', sup: true, ans: 4 }],
+    expanded: '(2x)(2x)(2x)(2x) = (2*2*2*2)(x*x*x*x)', explain: 'Four $2$’s and four $x$’s: $2^4 x^4$, which is $16x^4$.' },
+  { r: 3, type: 'num', phase: 'expand', exprT: 'Check with numbers: $2^2 · 3^2 =$',
+    q: 'Compute $2^2 · 3^2$. Then compare it with $(2·3)^2 = 6^2$.',
+    fields: [{ pre: '2^2 * 3^2 =', ans: 36 }],
+    explain: '$4 · 9 = 36$ and $6^2 = 36$. The same! Splitting the product before applying the power gives the same value.' },
+  { r: 3, type: 'num', phase: 'expand', expr: '(x/y)^3',
+    q: 'Write out three copies of $(x/y)$. Rewrite as one fraction with powers on top and bottom.',
+    fields: [{ pre: '= x', sup: true, ans: 3 }, { pre: '/ y', sup: true, ans: 3 }],
+    expanded: '(x/y)(x/y)(x/y) = (x*x*x) / (y*y*y)', explain: 'Three $x$’s on top and three $y$’s on the bottom: $x^3 / y^3$.' },
+  { r: 3, type: 'text', phase: 'notice', title: 'What do you notice?',
+    table: { head: ['Problem', 'Rewritten'], rows: [['(xy)^3', 'x^3 y^3'], ['(2x)^4', '2^4 x^4'], ['(x/y)^3', 'x^3 / y^3']] },
+    q: 'What happened to the exponent on the outside of the parentheses?', ph: 'I notice that…',
+    note: 'Listen for “each factor gets the exponent.” Push on the 2 in (2x)^4: it is a factor too.' },
+  { r: 3, type: 'num', phase: 'predict', expr: '(2x)^3',
+    q: 'Predict: $(2x)^3 =$ ___ $x^3$. What is the coefficient?',
+    fields: [{ pre: '=', ans: 8, post: 'x^3' }],
+    explain: 'The $2$ gets cubed too: $2^3 = 8$, so $8x^3$. If you wrote 6, you multiplied $2 · 3$ instead of cubing the $2$.',
+    note: 'Expect some 6s.' },
+  { r: 3, type: 'mc', phase: 'stress', exprT: '$(x + y)^2$',
+    q: 'Does the exponent “distribute” over addition? Test it with $x = 1$ and $y = 2$.',
+    options: ['Yes. $(x+y)^2 = x^2 + y^2$ always.', 'No. $(1+2)^2 = 9$ but $1^2 + 2^2 = 5$.', 'Only when the numbers are small.'], ans: 1,
+    explain: '$(1+2)^2 = 3^2 = 9$, but $1^2 + 2^2 = 1 + 4 = 5$. The property works for <b>products and quotients</b>, not sums.',
+    note: 'This sets the boundary of the property. A very common error later: (x+3)^2 = x^2 + 9.' },
+  { r: 3, type: 'text', phase: 'rule', title: 'Write the rule', q: 'Finish the sentence: <b>When you raise a product or a quotient to a power, you…</b>',
+    ph: 'When you raise a product or a quotient to a power, you…' },
+
+  /* ---------- Round 4: quotient of powers ---------- */
+  { r: 4, type: 'num', phase: 'expand', expr: 'x^5 / x^2',
+    q: 'Write out every factor and cancel matching pairs. How many $x$’s are left?',
+    fields: [{ pre: '= x', sup: true, ans: 3 }],
+    expanded: '(x*x*x*x*x) / (x*x) = x*x*x', explain: 'Two pairs cancel, leaving three $x$’s on top: $x^3$.' },
+  { r: 4, type: 'num', phase: 'expand', expr: '7^6 / 7^4',
+    q: 'Cancel matching pairs. How many $7$’s are left?',
+    fields: [{ pre: '= 7', sup: true, ans: 2 }],
+    expanded: '(7*7*7*7*7*7) / (7*7*7*7) = 7*7', explain: 'Four pairs cancel, leaving two $7$’s: $7^2$.' },
+  { r: 4, type: 'num', phase: 'expand', expr: 'y^8 / y^3',
+    q: 'Cancel matching pairs. How many $y$’s are left?',
+    fields: [{ pre: '= y', sup: true, ans: 5 }],
+    expanded: '(y*y*y*y*y*y*y*y) / (y*y*y) = y*y*y*y*y', explain: 'Three pairs cancel, leaving five $y$’s: $y^5$.' },
+  { r: 4, type: 'text', phase: 'notice', title: 'What do you notice?',
+    table: { head: ['Problem', 'As one power'], rows: [['x^5 / x^2', 'x^3'], ['7^6 / 7^4', '7^2'], ['y^8 / y^3', 'y^5']] },
+    q: 'How do the exponents in the problem relate to the exponent in the answer? Which one is subtracted from which?', ph: 'I notice that…' },
+  { r: 4, type: 'num', phase: 'predict', expr: 'x^12 / x^5',
+    q: 'Predict without expanding. Write it as one power.',
+    fields: [{ pre: '= x', sup: true, ans: 7 }],
+    explain: 'Top exponent minus bottom exponent: $12 − 5 = 7$, so $x^7$.' },
+  { r: 4, type: 'mc', phase: 'stress', expr: 'x^2 / x^5',
+    q: 'Cancel the matching $x$’s. What is left?',
+    options: ['$x^3$ on the top', '$x^3$ on the bottom, so $1 / x^3$', '$x^7$ on the top', 'Nothing is left, so it equals 0'], ans: 1,
+    explain: 'There are more $x$’s on the bottom, so three $x$’s stay in the denominator: $1 / x^3$. Next class we will see what “top minus bottom” says about this one.',
+    note: 'Teaser for negative exponents. Do not resolve it today.' },
+  { r: 4, type: 'text', phase: 'rule', title: 'Write the rule', q: 'Finish the sentence: <b>When you divide powers that have the same base, you…</b>',
+    ph: 'When you divide powers that have the same base, you…' },
+
+  { r: 5, type: 'info', phase: 'info', title: 'You discovered four properties', recap: true,
+    body: 'Each one came from expanding the exponents into repeated multiplication. If you ever forget a rule, expand a small example and you can rebuild it.' }
+];
+
+/* =====================================================================
+   5. STATE
+   ===================================================================== */
+const S = { role: null, code: null, sid: null, name: '', idx: 0, revealed: false, resp: {}, students: {}, feat: {}, mine: null,
+            draft: {}, showNames: false, notes: false, ended: false, watchIdx: -1 };
+const unsubs = {};
+function watch(key, path, cb) { if (unsubs[key]) unsubs[key](); unsubs[key] = DB.on(path, cb); }
+function unwatchAll() { Object.keys(unsubs).forEach(k => { unsubs[k](); delete unsubs[k]; }); }
+const ls = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => localStorage.setItem(k, JSON.stringify(v)), del: k => localStorage.removeItem(k) };
+const rid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-3);
+const genCode = () => Array.from({ length: 4 }, () => 'BCDFGHJKMNPQRSTVWXZ'[Math.floor(Math.random() * 19)]).join('');
+const joinURL = () => location.href.split('#')[0].split('?')[0];
+const base = () => `sessions/${S.code}`;
+
+function isCorrect(st, v) {
+  if (v == null) return false;
+  if (st.type === 'num') return v === st.fields.map(f => String(f.ans)).join('|');
+  if (st.type === 'mc') return v === String(st.ans);
+  return null;
+}
+
+/* =====================================================================
+   6. SHARED RENDER PIECES
+   ===================================================================== */
+const chip = st => st.r > 0 && st.r < 5 ? `<span class="pill">Round ${st.r}: ${esc(ROUNDS[st.r].name)}</span> ${st.phase !== 'info' ? `<span class="pill phase">${PHASE[st.phase]}</span>` : ''}` : `<span class="pill">${st.r === 0 ? 'Welcome' : 'Wrap-up'}</span>`;
+const exprHTML = (st, cls) => st.expr ? `<div class="expr ${cls}">${M(st.expr)}</div>` : st.exprT ? `<div class="expr ${cls}" style="font-size:.7em">${T(st.exprT)}</div>` : '';
+const tableHTML = st => st.table ? `<table class="table"><thead><tr>${st.table.head.map(h => `<th>${esc(h)}</th>`).join('')}</tr></thead><tbody>${st.table.rows.map(r => `<tr>${r.map(c => `<td>${M(c)}</td>`).join('')}</tr>`).join('')}</tbody></table>` : '';
+
+function chartHTML(r, title) {
+  const rows = ROUNDS[r].chart.map(c => `<div class="chart-row">
+      <div class="prop"><span>Property</span>${esc(c.prop)}<br>${M(c.alg)}</div>
+      <div><span>In words</span>${esc(c.words)}</div>
+      <div><span>Example</span>${M(c.example)}</div>
+      <div><span>Why it works</span>${M(c.why)}</div></div>`).join('');
+  return `<div class="chart"><div class="chart-h">${title || 'Anchor chart'}</div>${rows}</div>`;
+}
+const recapHTML = () => [1, 2, 3, 4].map(r => chartHTML(r, `Round ${r}`)).join('');
+
+function fieldsHTML(st, vals, disabled) {
+  const parts = String(vals == null ? '' : vals).split('|');
+  return `<div class="fields">` + st.fields.map((f, i) =>
+    `<span class="fld">${f.pre ? M(f.pre) : ''}<input class="num${f.sup ? ' sup' : ''}" data-i="${i}" inputmode="numeric" autocomplete="off" aria-label="Answer ${i + 1}" placeholder="?" value="${esc(parts[i] || '')}" ${disabled ? 'disabled' : ''}>${f.post ? M(f.post) : ''}</span>`).join('') + `</div>`;
+}
+function optsHTML(st, sel, locked) {
+  return `<div class="opts">` + st.options.map((o, i) => {
+    let c = 'opt';
+    if (S.revealed) { if (i === st.ans) c += ' right'; else if (String(i) === sel) c += ' wrong'; }
+    else if (String(i) === sel) c += ' sel';
+    return `<button class="${c}" data-act="pick" data-i="${i}" ${locked ? 'disabled' : ''}><b>${'ABCD'[i]}</b><span>${T(o)}</span></button>`;
+  }).join('') + `</div>`;
+}
+function revealHTML(st) {
+  let h = '';
+  if (st.expanded) h += `<div class="expanded"><div class="lbl">Expanded</div>${M(st.expanded)}</div>`;
+  if (st.explain) h += `<p class="explain">${T(st.explain)}</p>`;
+  if (st.phase === 'rule') h += chartHTML(st.r);
+  return h;
+}
+function ideasHTML(feat) {
+  const items = Object.values(feat || {}).map(f => f && f.text).filter(Boolean);
+  if (!items.length) return '';
+  return `<div class="ideas"><h3>Ideas from the class</h3>${items.map(t => `<blockquote>${esc(t)}</blockquote>`).join('')}</div>`;
+}
+
+/* =====================================================================
+   7. LANDING
+   ===================================================================== */
+function renderLanding(msg, teacherOpen) {
+  const saved = ls.get('expdisc:student') || {};
+  const tsaved = ls.get('expdisc:teacher');
+  const qcode = (new URLSearchParams(location.search).get('code') || saved.code || '').toUpperCase();
+  const showT = teacherOpen || new URLSearchParams(location.search).has('teacher');
+  $('#app').innerHTML = `<div class="landing">
+    <h1>Discover the exponent properties</h1>
+    <p class="sub">Expand, spot the pattern, predict, and write the rule yourself.</p>
+    ${DB.mode === 'local' ? `<div class="banner"><b>Practice mode.</b> Firebase isn’t set up yet, so this only syncs between tabs of this browser.</div>` : ''}
+    ${showT ? `
+      <div class="card">
+        <h2 style="font-size:1.2rem;margin-bottom:12px">Teacher</h2>
+        <div class="row" style="margin-top:0">
+          <button class="btn" data-act="newsession">Start a new session</button>
+          ${tsaved ? `<button class="ghost" data-act="resume">Resume ${esc(tsaved.code)}</button>` : ''}
+        </div>
+        <p class="err" id="err">${esc(msg || '')}</p>
+        <p class="teacher-link"><button data-act="studentpanel">I’m a student</button></p>
+      </div>` : `
+      <div class="card">
+        <label for="code" style="margin-top:0">Class code</label>
+        <input id="code" class="txt code-in" maxlength="4" autocomplete="off" value="${esc(qcode)}" placeholder="ABCD">
+        <label for="name">Your first name</label>
+        <input id="name" class="txt" maxlength="20" autocomplete="off" value="${esc(saved.name || '')}" placeholder="First name">
+        <div class="row"><button class="btn" data-act="join">Join class</button></div>
+        <p class="err" id="err">${esc(msg || '')}</p>
+      </div>
+      <p class="teacher-link">Teacher? <button data-act="teacherpanel">Open teacher controls</button></p>`}
+  </div>`;
+}
+
+/* =====================================================================
+   8. TEACHER
+   ===================================================================== */
+async function newSession() {
+  try {
+    let code;
+    for (let i = 0; i < 12; i++) { code = genCode(); if (!(await DB.once(`sessions/${code}/state`))) break; }
+    await DB.set(`sessions/${code}`, { state: { idx: 0, revealed: false, t: Date.now() }, created: Date.now() });
+    ls.set('expdisc:teacher', { code });
+    startTeacher(code);
+  } catch (e) { renderLanding('Could not reach Firebase. Check your config and database rules.', true); }
+}
+async function resumeSession() {
+  const t = ls.get('expdisc:teacher'); if (!t) return;
+  try {
+    const st = await DB.once(`sessions/${t.code}/state`);
+    if (!st) { ls.del('expdisc:teacher'); return renderLanding('That session no longer exists.', true); }
+    startTeacher(t.code);
+  } catch (e) { renderLanding('Could not reach Firebase.', true); }
+}
+function startTeacher(code) {
+  S.role = 'teacher'; S.code = code; S.watchIdx = -1;
+  watch('state', `${base()}/state`, st => {
+    if (!st) return;
+    const changed = st.idx !== S.watchIdx;
+    S.idx = st.idx; S.revealed = !!st.revealed;
+    if (changed) {
+      S.watchIdx = st.idx; S.resp = {}; S.feat = {};
+      watch('resp', `${base()}/responses/${S.idx}`, v => { S.resp = v || {}; renderResults(); });
+      watch('feat', `${base()}/featured/${S.idx}`, v => { S.feat = v || {}; renderResults(); });
+    }
+    renderTeacher();
+  });
+  watch('students', `${base()}/students`, v => { S.students = v || {}; updateJoined(); renderResults(); });
+}
+const setState = (idx, revealed) => DB.set(`${base()}/state`, { idx, revealed, t: Date.now() });
+
+function renderTeacher() {
+  const st = STEPS[S.idx], total = STEPS.length;
+  let stage = `<div>${chip(st)}</div>`;
+  if (st.type === 'info') {
+    stage += `<h2 class="t-title" style="font-size:2.2rem">${esc(st.title)}</h2><p class="t-q">${st.body}</p>${st.recap ? recapHTML() : ''}`;
+  } else {
+    if (st.title) stage += `<h2 class="t-title">${esc(st.title)}</h2>`;
+    stage += exprHTML(st, 't-expr') + tableHTML(st);
+    stage += `<p class="t-q">${T(st.q)}</p>`;
+    if (st.type === 'num') stage += fieldsHTML(st, '', true);
+    if (st.type === 'mc') stage += optsHTML(st, null, true);
+    if (S.revealed) stage += revealHTML(st);
+    if (S.revealed || st.type === 'text') stage += ideasHTML(S.feat);
+  }
+  const revealLabel = st.type === 'text' ? (st.phase === 'rule' ? 'Reveal anchor chart' : 'Lock responses') : 'Reveal answer';
+  const notes = !S.notes ? '' : `<div class="card notes"><h3>Teacher notes (hide before projecting)</h3>
+      ${st.type === 'num' ? `<p><b>Answer:</b> ${st.fields.map(f => f.ans).join(', ')}</p>` : ''}
+      ${st.type === 'mc' ? `<p><b>Answer:</b> ${'ABCD'[st.ans]}</p>` : ''}
+      ${st.note ? `<p>${T(st.note)}</p>` : '<p>No specific notes for this step.</p>'}
+      ${st.r >= 1 && st.r <= 4 ? chartHTML(st.r, 'Anchor chart reference') : ''}</div>`;
+  $('#app').innerHTML = `<div class="t-wrap">
+    <header class="t-top">
+      <div class="brand">Exponent Properties</div>
+      <div class="join">Join at <span class="url">${esc(joinURL())}</span> with code <span class="code">${esc(S.code)}</span></div>
+      <div class="t-tools"><span class="pill" id="joined"></span>
+        <button class="ghost" data-act="names">Names: ${S.showNames ? 'shown' : 'hidden'}</button>
+        <button class="ghost" data-act="notes">${S.notes ? 'Hide notes' : 'Notes'}</button>
+        <button class="ghost danger" data-act="end">End session</button></div>
+    </header>
+    ${DB.mode === 'local' ? `<div class="banner"><b>Practice mode.</b> Open this page in a second tab, join as a student with code <b>${esc(S.code)}</b>, and the two tabs will sync.</div>` : ''}
+    <main class="t-grid">
+      <section class="card stage">${stage}</section>
+      <aside class="card results" id="results"></aside>
+    </main>${notes}
+    <footer class="t-foot">
+      <button class="ghost" data-act="back" ${S.idx === 0 ? 'disabled' : ''}>Back</button>
+      <div class="prog">Step ${S.idx + 1} of ${total}<div class="meter"><span style="width:${((S.idx + 1) / total) * 100}%"></span></div></div>
+      ${st.type !== 'info' ? `<button class="btn alt" data-act="reveal" ${S.revealed ? 'disabled' : ''}>${revealLabel}</button>` : ''}
+      <button class="btn" data-act="next" ${S.idx >= total - 1 ? 'disabled' : ''}>Next step</button>
+      <span class="kbd">Keys: ← back, → next, R reveal, N notes</span>
+    </footer></div>`;
+  renderResults(); updateJoined();
+}
+function updateJoined() { const el = $('#joined'); if (el) el.textContent = `${Object.keys(S.students).length} joined`; }
+
+function renderResults() {
+  const el = $('#results'); if (!el || S.role !== 'teacher') return;
+  const st = STEPS[S.idx];
+  if (st.type === 'info') { el.innerHTML = `<h3>Class</h3><p class="rhead"><b>${Object.keys(S.students).length}</b> students have joined.</p>`; return; }
+  const entries = Object.entries(S.resp), n = entries.length, joined = Object.keys(S.students).length;
+  let html = `<h3>Live responses</h3><div class="rhead"><b>${n}</b> of ${joined} answered</div>`;
+  if (st.type === 'num' || st.type === 'mc') {
+    const groups = {};
+    entries.forEach(([, r]) => { groups[r.v] = (groups[r.v] || 0) + 1; });
+    let keys;
+    if (st.type === 'mc') keys = st.options.map((_, i) => String(i));
+    else keys = Object.keys(groups).sort((a, b) => groups[b] - groups[a]);
+    const max = Math.max(1, ...keys.map(k => groups[k] || 0));
+    if (!keys.length) html += `<p style="color:var(--muted)">Waiting for answers…</p>`;
+    keys.forEach(k => {
+      const c = groups[k] || 0, right = S.revealed && isCorrect(st, k);
+      const lab = st.type === 'mc' ? `<b>${'ABCD'[+k]}</b>` : esc(k.split('|').join(', '));
+      html += `<div class="bar ${right ? 'right' : ''}"><div class="lab">${lab}</div><div class="track"><div class="fill" style="width:${(c / max) * 100}%"></div></div><div class="n">${c}</div></div>`;
+    });
+    if (S.revealed && n) {
+      const good = entries.filter(([, r]) => isCorrect(st, r.v)).length;
+      html += `<p style="margin-top:12px"><b>${Math.round((good / n) * 100)}%</b> correct (${good} of ${n})</p>`;
+    }
+    if (st.type === 'mc') html += `<p style="margin-top:12px;color:var(--muted);font-size:.9rem">Choices A–D are the options on the left.</p>`;
+  } else {
+    const list = entries.sort((a, b) => (S.feat[a[0]] ? -1 : 0) - (S.feat[b[0]] ? -1 : 0) || a[1].t - b[1].t);
+    html += `<div class="scroll">` + (list.length ? list.map(([sid, r]) => `<div class="idea ${S.feat[sid] ? 'star' : ''}">
+        <p>${S.showNames ? `<small>${esc(r.name)}</small>` : ''}${esc(r.v)}</p>
+        <button data-act="star" data-sid="${esc(sid)}" title="Share with class" aria-label="Share with class">${S.feat[sid] ? '★' : '☆'}</button></div>`).join('') : `<p style="color:var(--muted)">Waiting for ideas…</p>`) + `</div>
+      <p style="margin-top:10px;color:var(--muted);font-size:.9rem">Star an idea to show it, anonymously, on every student’s screen.</p>`;
+  }
+  el.innerHTML = html;
+}
+
+/* =====================================================================
+   9. STUDENT
+   ===================================================================== */
+async function joinSession() {
+  const code = ($('#code').value || '').toUpperCase().trim(), name = ($('#name').value || '').trim();
+  if (code.length !== 4) return renderLandingKeep('Enter the 4-letter class code.');
+  if (!name) return renderLandingKeep('Enter your first name.');
+  try {
+    const st = await DB.once(`sessions/${code}/state`);
+    if (!st) return renderLandingKeep('No class found with that code. Check it and try again.');
+    const prev = ls.get('expdisc:student');
+    const sid = (prev && prev.sid) || rid();
+    await DB.set(`sessions/${code}/students/${sid}`, { name, t: Date.now() });
+    ls.set('expdisc:student', { code, name, sid });
+    startStudent(code, name, sid);
+  } catch (e) { renderLandingKeep('Could not connect. Ask your teacher to check the setup.'); }
+}
+function renderLandingKeep(msg) { const e = $('#err'); if (e) e.textContent = msg; }
+function startStudent(code, name, sid) {
+  Object.assign(S, { role: 'student', code, name, sid, ended: false, watchIdx: -1, mine: null });
+  watch('state', `${base()}/state`, st => {
+    if (!st) { S.ended = true; return renderStudent(); }
+    S.idx = st.idx; S.revealed = !!st.revealed;
+    if (S.idx !== S.watchIdx) {
+      S.watchIdx = S.idx; S.mine = null; S.feat = {};
+      watch('mine', `${base()}/responses/${S.idx}/${S.sid}`, v => { S.mine = v; renderStudent(); });
+      watch('feat', `${base()}/featured/${S.idx}`, v => { S.feat = v || {}; renderStudent(); });
+    }
+    renderStudent();
+  });
+}
+function renderStudent() {
+  const app = $('#app');
+  if (S.ended) { app.innerHTML = `<div class="s-wrap"><div class="card" style="margin-top:18vh;text-align:center"><h2 class="s-title">This session has ended</h2><p>Thanks for joining. You can close this page.</p><div class="row" style="justify-content:center;margin-top:16px"><button class="ghost" data-act="leave">Join another</button></div></div></div>`; return; }
+  const st = STEPS[S.idx], mineV = S.mine ? S.mine.v : null, shown = S.draft[S.idx] != null ? S.draft[S.idx] : mineV;
+  let body = '';
+  if (st.type === 'info') {
+    body = `<h2 class="s-title">${esc(st.title)}</h2><p class="s-q">${st.body}</p>${st.recap ? recapHTML() : ''}`;
+  } else {
+    if (st.title) body += `<h2 class="s-title">${esc(st.title)}</h2>`;
+    body += exprHTML(st, 's-expr') + tableHTML(st) + `<p class="s-q">${T(st.q)}</p>`;
+    if (st.type === 'num') {
+      body += fieldsHTML(st, shown, S.revealed);
+      if (!S.revealed) body += `<div class="row" style="margin-top:12px"><button class="btn" data-act="submit">${mineV != null ? 'Update answer' : 'Submit answer'}</button></div>`;
+    }
+    if (st.type === 'mc') body += optsHTML(st, mineV, S.revealed);
+    if (st.type === 'text') {
+      body += `<textarea class="txt" maxlength="300" placeholder="${esc(st.ph || '')}" ${S.revealed ? 'disabled' : ''}>${esc(shown || '')}</textarea>`;
+      if (!S.revealed) body += `<div class="row" style="margin-top:12px"><button class="btn" data-act="submit">${mineV != null ? 'Update idea' : 'Share my idea'}</button></div>`;
+    }
+    body += `<div class="err" id="err"></div>`;
+    if (!S.revealed && mineV != null) body += `<div class="ok">Submitted. You can change it until your teacher reveals.</div>`;
+    if (S.revealed && st.type !== 'text') {
+      const ok = isCorrect(st, mineV);
+      body += mineV == null ? `<div class="verdict none">You didn’t answer this one. Read the explanation below.</div>`
+        : ok ? `<div class="verdict good">Correct!</div>` : `<div class="verdict bad">Not quite. Look at how it works below.</div>`;
+    }
+    if (S.revealed) body += revealHTML(st);
+    if (S.revealed || st.type === 'text') body += ideasHTML(S.feat);
+  }
+  app.innerHTML = `<div class="s-wrap"><div class="s-top"><div>${chip(st)}</div><div class="who">${esc(S.name)} <button data-act="leave">Leave</button></div></div><section class="card">${body}</section></div>`;
+}
+async function submit() {
+  const st = STEPS[S.idx]; let v;
+  const err = m => { const e = $('#err'); if (e) e.textContent = m; };
+  if (S.revealed) return;
+  if (st.type === 'num') {
+    const vals = [...document.querySelectorAll('.num')].map(i => i.value.trim());
+    if (vals.some(x => x === '' || isNaN(Number(x)))) return err('Enter a number in every box.');
+    v = vals.map(x => String(Number(x))).join('|');
+  } else {
+    v = ($('.txt').value || '').trim().slice(0, 300);
+    if (!v) return err('Type your idea first.');
+  }
+  try { await DB.set(`${base()}/responses/${S.idx}/${S.sid}`, { name: S.name, v, t: Date.now() }); delete S.draft[S.idx]; }
+  catch (e) { err('Could not submit. Check your connection and try again.'); }
+}
+async function pick(i) {
+  if (S.revealed) return;
+  try { await DB.set(`${base()}/responses/${S.idx}/${S.sid}`, { name: S.name, v: String(i), t: Date.now() }); } catch (e) {}
+}
+
+/* =====================================================================
+   10. EVENTS
+   ===================================================================== */
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const a = b.dataset.act, st = STEPS[S.idx];
+  if (a === 'join') return joinSession();
+  if (a === 'teacherpanel') return renderLanding('', true);
+  if (a === 'studentpanel') { history.replaceState(null, '', joinURL()); return renderLanding(); }
+  if (a === 'newsession') return newSession();
+  if (a === 'resume') return resumeSession();
+  if (a === 'submit') return submit();
+  if (a === 'pick') return pick(b.dataset.i);
+  if (a === 'leave') { unwatchAll(); ls.del('expdisc:student'); S.role = null; S.ended = false; return renderLanding(); }
+  if (S.role !== 'teacher') return;
+  if (a === 'names') { S.showNames = !S.showNames; return renderTeacher(); }
+  if (a === 'notes') { S.notes = !S.notes; return renderTeacher(); }
+  if (a === 'back' && S.idx > 0) return setState(S.idx - 1, false);
+  if (a === 'next' && S.idx < STEPS.length - 1) return setState(S.idx + 1, false);
+  if (a === 'reveal' && st.type !== 'info') return setState(S.idx, true);
+  if (a === 'star') {
+    const sid = b.dataset.sid, r = S.resp[sid]; if (!r) return;
+    return DB.set(`${base()}/featured/${S.idx}/${sid}`, S.feat[sid] ? null : { text: r.v });
+  }
+  if (a === 'end') {
+    if (!confirm('End this session and delete all responses?')) return;
+    await DB.remove(base()); unwatchAll(); ls.del('expdisc:teacher'); S.role = null; renderLanding('Session ended.', true);
+  }
+});
+document.addEventListener('input', e => {
+  if (S.role === 'student' && e.target.matches('.num,.txt')) {
+    const st = STEPS[S.idx];
+    S.draft[S.idx] = st.type === 'num' ? [...document.querySelectorAll('.num')].map(i => i.value).join('|') : e.target.value;
+  }
+});
+document.addEventListener('keydown', e => {
+  if (S.role !== 'teacher' || /INPUT|TEXTAREA/.test(e.target.tagName) || e.metaKey || e.ctrlKey) return;
+  const st = STEPS[S.idx];
+  if (e.key === 'ArrowRight' && S.idx < STEPS.length - 1) setState(S.idx + 1, false);
+  else if (e.key === 'ArrowLeft' && S.idx > 0) setState(S.idx - 1, false);
+  else if ((e.key === 'r' || e.key === 'R') && st.type !== 'info') setState(S.idx, true);
+  else if (e.key === 'n' || e.key === 'N') { S.notes = !S.notes; renderTeacher(); }
+});
+document.addEventListener('keydown', e => {
+  if (S.role === null && e.key === 'Enter' && e.target.matches('#code,#name')) joinSession();
+});
+
+/* =====================================================================
+   11. BOOT
+   ===================================================================== */
+(function boot() {
+  const teacherMode = new URLSearchParams(location.search).has('teacher');
+  const ssaved = ls.get('expdisc:student');
+  if (!teacherMode && ssaved && ssaved.code) {
+    DB.once(`sessions/${ssaved.code}/state`).then(st => {
+      if (st) startStudent(ssaved.code, ssaved.name, ssaved.sid); else renderLanding();
+    }).catch(() => renderLanding());
+  } else renderLanding();
+})();
+</script>
+</body>
+</html>
