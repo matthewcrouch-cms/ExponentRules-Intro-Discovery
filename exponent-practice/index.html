@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Find the Missing Exponent</title>
+<style>
+:root{
+  --paper:#f7f9fc; --grid:#e3eaf3; --card:#ffffff; --ink:#14233a; --muted:#566883; --line:#d5deea;
+  --blue:#4B9CD3; --blue-d:#1d6aa5; --blue-soft:#e6f2fa; --orange:#F56600; --orange-soft:#fff0e5;
+  --good:#17805a; --good-soft:#e2f5ec; --bad:#b83a2b; --bad-soft:#fbeae7;
+  --math:"Cambria Math","STIX Two Text","Latin Modern Math",Cambria,Georgia,"Times New Roman",serif;
+  --ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#0f1824; --grid:#17263a; --card:#16222f; --ink:#e8eef7; --muted:#9db0c8; --line:#2b3d55;
+    --blue:#6bb3e3; --blue-d:#8cc6ee; --blue-soft:#183249; --orange:#ff8a3d; --orange-soft:#3a2415;
+    --good:#4fcf9b; --good-soft:#12352a; --bad:#ff8c7d; --bad-soft:#3a1c18; color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:var(--ui); color:var(--ink); background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px; line-height:1.45; -webkit-text-size-adjust:100%;
+}
+.math{font-family:var(--math); white-space:nowrap}
+.math i{font-style:italic}
+sup{font-size:.74em; line-height:0}
+button{font:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--orange); outline-offset:2px}
+h1,h2,h3,p{margin:0}
+
+/* math pieces */
+.frac{display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; margin:0 .12em; line-height:1.2}
+.frac>.np{padding:0 .28em .1em; border-bottom:.07em solid currentColor}
+.frac>.dp{padding:.12em .28em 0}
+.bx{display:inline-block; width:.8em; height:.8em; border:.1em solid currentColor; border-radius:.14em; vertical-align:-.08em; background:var(--card)}
+sup .bx{width:.85em; height:.85em; vertical-align:-.1em}
+
+/* shared */
+.card{background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:20px}
+.pill{display:inline-block; font-size:.82rem; font-weight:600; padding:3px 11px; border-radius:99px; background:var(--blue-soft); color:var(--blue-d)}
+.pill.phase{background:var(--orange-soft); color:var(--orange)}
+.btn{border:0; border-radius:10px; padding:11px 20px; font-weight:650; background:var(--blue-d); color:#fff}
+@media (prefers-color-scheme: dark){ .btn{color:#0f1824} .btn.alt{color:#0f1824} }
+.btn:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.45; cursor:not-allowed}
+.btn.alt{background:var(--orange); color:#fff}
+.ghost{background:transparent; color:var(--ink); border:1.5px solid var(--line); border-radius:10px; padding:8px 14px; font-weight:600}
+.ghost:hover{border-color:var(--blue)}
+.ghost.danger{color:var(--bad)}
+.ghost[disabled]{opacity:.45; cursor:not-allowed}
+.banner{background:var(--orange-soft); border:1.5px solid var(--orange); color:var(--ink); border-radius:10px; padding:9px 14px; font-size:.9rem; margin-bottom:14px}
+.expr{font-family:var(--math); line-height:1.35; white-space:normal}
+.eq-wrap{overflow-x:auto; padding:6px 0}
+.fields{display:flex; flex-wrap:wrap; gap:10px 28px; align-items:center; font-family:var(--math); font-size:2rem; margin:12px 0 6px}
+.fld{white-space:nowrap; display:inline-flex; align-items:center; gap:8px}
+.fields .btn{font:650 1rem var(--ui)}
+input.num{font:600 1.15rem var(--ui); width:4.2em; padding:9px 8px; text-align:center; border:2px solid var(--line); border-radius:9px; background:var(--card); color:var(--ink)}
+input.num:focus{border-color:var(--blue); outline:none}
+input.num[disabled]{background:transparent; opacity:.85}
+input.txt{width:100%; font:1.05rem var(--ui); padding:12px; border:2px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink)}
+input.txt:focus{border-color:var(--blue); outline:none}
+.opts{display:grid; gap:10px; margin:12px 0}
+.opt{display:flex; gap:12px; align-items:center; text-align:left; width:100%; padding:13px 16px; border:2px solid var(--line); border-radius:12px; background:var(--card); color:var(--ink); font-size:1.12rem}
+.opt b{flex:none; width:1.9rem; height:1.9rem; border-radius:50%; display:grid; place-items:center; background:var(--blue-soft); color:var(--blue-d); font-size:.9rem}
+.opt:hover:not([disabled]){border-color:var(--blue)}
+.opt.sel{border-color:var(--blue-d); background:var(--blue-soft)}
+.opt.right{border-color:var(--good); background:var(--good-soft)}
+.opt.wrong{border-color:var(--bad); background:var(--bad-soft)}
+.opt[disabled]{cursor:default}
+.explain{margin:12px 0; font-size:1.08rem}
+.verdict{border-radius:10px; padding:10px 14px; font-weight:650; margin:14px 0 4px}
+.verdict.good{background:var(--good-soft); color:var(--good)}
+.verdict.bad{background:var(--bad-soft); color:var(--bad)}
+.verdict.none{background:var(--blue-soft); color:var(--blue-d)}
+.hintbox{margin-top:12px; padding:10px 14px; border-left:5px solid var(--blue); background:var(--blue-soft); border-radius:0 10px 10px 0}
+.err{color:var(--bad); font-weight:600; min-height:1.4em; margin-top:8px}
+.ok{color:var(--good); font-weight:600; margin-top:8px}
+.moves{list-style:none; margin:16px 0; padding:0; display:grid; gap:10px}
+.moves li{display:flex; gap:14px; align-items:center; padding:11px 16px; border:1.5px solid var(--line); border-radius:12px; background:var(--card)}
+.moves .n{flex:none; width:2.3rem; height:2.3rem; border-radius:50%; display:grid; place-items:center; background:var(--blue-soft); color:var(--blue-d); border:2px solid var(--blue); font-weight:700}
+.moves b{display:block; font-size:1.18em}
+.moves .t{display:block; color:var(--muted)}
+.info-foot{margin-top:14px; color:var(--muted)}
+
+/* worked solution */
+.sol{margin:16px 0 4px; padding:14px 16px; border-left:5px solid var(--orange); background:var(--orange-soft); border-radius:0 10px 10px 0}
+.sol h3{font:700 .85rem var(--ui); color:var(--orange); margin-bottom:8px}
+.sol ol{margin:0; padding:0; list-style:none; display:grid; gap:10px}
+.sol li .sl{display:block; font:600 .85rem var(--ui); color:var(--muted)}
+.sol li .sm{font-size:1.45rem; overflow-x:auto}
+.sol li.chk .sl{color:var(--good)}
+.andw{font:600 .9rem var(--ui); color:var(--muted); margin:0 .5em}
+
+/* landing */
+.landing{max-width:520px; margin:0 auto; padding:9vh 18px 40px}
+.landing h1{font:700 clamp(1.9rem,6vw,2.6rem)/1.15 var(--math); margin-bottom:8px}
+.landing .sub{color:var(--muted); margin-bottom:22px}
+.landing label{display:block; font-weight:600; margin:14px 0 6px}
+.landing .row{display:flex; gap:12px; margin-top:20px; align-items:center; flex-wrap:wrap}
+.code-in{text-transform:uppercase; letter-spacing:.35em; font-weight:700; text-align:center}
+.teacher-link{margin-top:26px; font-size:.92rem; color:var(--muted)}
+.teacher-link button{background:none; border:0; color:var(--blue-d); text-decoration:underline; padding:0}
+
+/* student */
+.s-wrap{max-width:760px; margin:0 auto; padding:14px 14px 80px}
+.s-top{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap}
+.s-top .who{color:var(--muted); font-size:.92rem}
+.s-top .who button{background:none; border:0; color:var(--muted); text-decoration:underline; padding:0 0 0 8px; font-size:.85rem}
+.s-eq{font-size:clamp(1.8rem,7.5vw,3.1rem); margin:8px 0 12px}
+.s-q{font-size:1.15rem; margin-bottom:6px}
+.s-title{font:700 1.6rem var(--math); margin:6px 0 10px}
+.pmeter{margin:4px 0 12px}
+.pmeter .row{display:flex; justify-content:space-between; font-size:.9rem; color:var(--muted); margin-bottom:4px}
+.pmeter .meter{height:8px; background:var(--blue-soft); border-radius:99px; overflow:hidden}
+.pmeter .meter span{display:block; height:100%; background:var(--good); transition:width .3s}
+.nav{display:flex; flex-wrap:wrap; gap:6px 18px; margin-bottom:14px}
+.lvl{display:flex; align-items:center; gap:5px; flex-wrap:wrap}
+.lvl-n{font:700 .74rem var(--ui); color:var(--muted); margin-right:3px}
+.dot{width:34px; height:34px; border-radius:50%; border:2px solid var(--line); background:var(--card); color:var(--ink); font-weight:700; font-size:.85rem; padding:0}
+.dot.first{background:var(--good); border-color:var(--good); color:#fff}
+.dot.retry{background:var(--good-soft); border-color:var(--good); color:var(--good)}
+.dot.wrong{background:var(--orange-soft); border-color:var(--orange); color:var(--orange)}
+.dot.cur{box-shadow:0 0 0 3px var(--blue)}
+.pnav{display:flex; justify-content:space-between; gap:10px; margin-top:18px}
+.done-banner{background:var(--good-soft); border:2px solid var(--good); color:var(--good); border-radius:12px; padding:14px 16px; font-weight:650; margin-bottom:14px}
+
+/* teacher */
+.t-wrap{max-width:1500px; margin:0 auto; padding:14px 18px 110px}
+.t-top{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:14px}
+.brand{font:700 1.25rem var(--math)}
+.join{font-size:1.02rem}
+.join .code{font:700 1.5rem var(--ui); letter-spacing:.2em; background:var(--orange); color:#fff; padding:2px 12px; border-radius:8px; margin-left:4px}
+.join .url{font-weight:650; color:var(--blue-d)}
+.t-tools{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.t-grid{display:grid; grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr); gap:16px; align-items:start}
+.stage{min-height:56vh; padding:24px 28px}
+.t-title{font:700 1.5rem var(--math); margin:10px 0 6px}
+.t-eq{font-size:clamp(2.4rem,5.2vw,4.4rem); margin:10px 0 14px}
+.t-q{font-size:1.4rem; max-width:44rem}
+.stage .fields{font-size:2.6rem}
+.stage .sol li .sm{font-size:1.9rem}
+.stage .sol li .sl{font-size:1rem}
+.stage .moves{font-size:1.45rem; gap:12px}
+.stage .moves .n{width:3rem; height:3rem; font-size:1.3rem}
+.results h3{font-size:1.05rem; margin-bottom:10px}
+.rhead{font-size:1.02rem; margin-bottom:12px}
+.rhead b{font-size:1.6rem}
+.bar{display:grid; grid-template-columns:minmax(4rem,9rem) 1fr 2.2rem; gap:10px; align-items:center; margin:7px 0}
+.bar .lab{font-size:1.5rem; text-align:right}
+.bar .track{height:26px; background:var(--blue-soft); border-radius:7px; overflow:hidden}
+.bar .fill{height:100%; background:var(--blue); transition:width .35s; min-width:3px}
+.bar.right .fill{background:var(--good)}
+.bar.right .lab{color:var(--good); font-weight:700}
+.bar .n{font-weight:700}
+.notes{margin-top:16px; border-style:dashed}
+.notes h3{font-size:1rem; margin-bottom:6px}
+.t-foot{position:fixed; left:0; right:0; bottom:0; background:var(--card); border-top:1.5px solid var(--line); padding:10px 18px; display:flex; align-items:center; gap:12px; justify-content:center; flex-wrap:wrap}
+.t-foot .prog{flex:1 1 220px; max-width:420px; font-size:.85rem; color:var(--muted)}
+.prog .meter{height:8px; background:var(--blue-soft); border-radius:99px; overflow:hidden; margin-top:4px}
+.prog .meter span{display:block; height:100%; background:var(--blue-d)}
+.kbd{font-size:.78rem; color:var(--muted)}
+
+/* teacher practice dashboard */
+.tiles{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:14px}
+.tile{padding:14px 16px}
+.tile b{display:block; font-size:2rem; line-height:1.1}
+.tile span{color:var(--muted); font-size:.9rem}
+.gwrap{overflow-x:auto}
+table.grid{border-collapse:separate; border-spacing:3px; width:100%; min-width:760px}
+table.grid th,table.grid td{text-align:center; font-size:.95rem; padding:0}
+table.grid th.lvh{font:700 .78rem var(--ui); color:var(--muted); padding:2px 0 4px; border-bottom:2px solid var(--line)}
+table.grid th.pn button{width:100%; border:0; background:transparent; color:var(--ink); font-weight:700; padding:6px 0; border-radius:6px}
+table.grid th.pn button:hover,table.grid th.pn.sel button{background:var(--blue-soft); color:var(--blue-d)}
+table.grid td.nm{text-align:left; padding:0 12px 0 4px; white-space:nowrap; font-weight:600; position:sticky; left:0; background:var(--card); min-width:130px}
+table.grid td.c{height:34px; min-width:34px; border-radius:7px; background:var(--paper); border:1.5px solid var(--line); font-weight:700}
+td.c.first{background:var(--good); border-color:var(--good); color:#fff}
+td.c.retry{background:var(--good-soft); border-color:var(--good); color:var(--good)}
+td.c.wrong{background:var(--orange-soft); border-color:var(--orange); color:var(--orange)}
+td.c.stuck{background:var(--bad-soft); border-color:var(--bad); color:var(--bad)}
+table.grid tfoot td{padding-top:6px; font-size:.82rem; color:var(--muted); font-weight:600}
+.stuck-flag{display:inline-block; margin-left:8px; font-size:.78rem; color:var(--bad); font-weight:700}
+.legend{display:flex; flex-wrap:wrap; gap:14px; margin:12px 0 0; font-size:.85rem; color:var(--muted)}
+.legend span::before{content:""; display:inline-block; width:14px; height:14px; border-radius:4px; margin-right:6px; vertical-align:-2px; border:1.5px solid var(--line)}
+.legend .l1::before{background:var(--good); border-color:var(--good)}
+.legend .l2::before{background:var(--good-soft); border-color:var(--good)}
+.legend .l3::before{background:var(--orange-soft); border-color:var(--orange)}
+.legend .l4::before{background:var(--bad-soft); border-color:var(--bad)}
+.detail{margin-top:16px}
+.detail .t-eq{font-size:clamp(2rem,4vw,3.2rem); margin:6px 0}
+
+@media (max-width:900px){
+  .t-grid{grid-template-columns:1fr}
+  .stage{padding:18px}
+}
+@media (prefers-reduced-motion:reduce){ .bar .fill,.pmeter .meter span{transition:none} }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+/* =====================================================================
+   1. FIREBASE (same project as the discovery lesson).
+   Leave databaseURL empty to run in PRACTICE MODE (two tabs, one browser).
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDkuZVoCbhVotMLGi_iI8wGYCrRKie8ex8",
+  authDomain: "exponentproperties-7198b.firebaseapp.com",
+  databaseURL: "https://exponentproperties-7198b-default-rtdb.firebaseio.com",
+  projectId: "exponentproperties-7198b",
+  appId: "1:189445254765:web:3e6f1c783f9b6fdfa85964"
+};
+
+/* =====================================================================
+   2. TINY DATABASE LAYER
+   ===================================================================== */
+const DB = (() => {
+  const live = !!FIREBASE_CONFIG.databaseURL && typeof firebase !== 'undefined';
+  if (live) {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const fdb = firebase.database();
+    return {
+      mode: 'live',
+      set: (p, v) => fdb.ref(p).set(v),
+      remove: p => fdb.ref(p).remove(),
+      once: p => fdb.ref(p).once('value').then(s => s.val()),
+      on: (p, cb) => { const r = fdb.ref(p); const h = r.on('value', s => cb(s.val())); return () => r.off('value', h); }
+    };
+  }
+  const KEY = 'expprac:tree', subs = [];
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  const get = (t, p) => { const v = p.split('/').reduce((o, k) => (o == null ? null : o[k]), t); return v === undefined ? null : v; };
+  const clone = v => (v == null ? null : JSON.parse(JSON.stringify(v)));
+  const notify = () => { const t = read(); subs.slice().forEach(s => s.cb(clone(get(t, s.p)))); };
+  window.addEventListener('storage', e => { if (e.key === KEY) notify(); });
+  function write(p, v) {
+    const t = read(), ks = p.split('/'); let o = t;
+    ks.slice(0, -1).forEach(k => { if (typeof o[k] !== 'object' || o[k] === null) o[k] = {}; o = o[k]; });
+    if (v === null) delete o[ks[ks.length - 1]]; else o[ks[ks.length - 1]] = v;
+    localStorage.setItem(KEY, JSON.stringify(t)); notify();
+  }
+  return {
+    mode: 'local',
+    set: (p, v) => { write(p, clone(v)); return Promise.resolve(); },
+    remove: p => { write(p, null); return Promise.resolve(); },
+    once: p => Promise.resolve(clone(get(read(), p))),
+    on: (p, cb) => { const s = { p, cb }; subs.push(s); setTimeout(() => { if (subs.includes(s)) cb(clone(get(read(), p))); }, 0); return () => { const i = subs.indexOf(s); if (i >= 0) subs.splice(i, 1); }; }
+  };
+})();
+
+/* =====================================================================
+   3. MATH FORMATTING
+   M("x^□ * x^4"): italic variables, superscripts, dot, empty box.
+   [a|b] = stacked fraction.  ~ = invisible multiplication.
+   ===================================================================== */
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function mathInner(s) {
+  let t = esc(s);
+  t = t.replace(/[a-z]/g, c => `<i>${c}</i>`);
+  t = t.replace(/\^(\{[^}]*\}|<i>[a-z]<\/i>|-?\d+|□)/g, (m, g) => '<sup>' + g.replace(/^\{|\}$/g, '') + '</sup>');
+  return t.replace(/\*/g, '·').replace(/~/g, '').replace(/□/g, '<span class="bx"></span>');
+}
+function M(s) {
+  const parts = [];
+  s = String(s).replace(/\[([^\[\]|]+)\|([^\[\]|]+)\]/g, (m, a, b) => { parts.push([a, b]); return '\u0001' + (parts.length - 1) + '\u0002'; });
+  let t = mathInner(s);
+  t = t.replace(/\u0001(\d+)\u0002/g, (m, i) => `<span class="frac"><span class="np">${mathInner(parts[i][0])}</span><span class="dp">${mathInner(parts[i][1])}</span></span>`);
+  return `<span class="math">${t}</span>`;
+}
+const T = s => String(s).replace(/\$([^$]+)\$/g, (m, g) => M(g));
+const mathLine = m => m.split(' and ').map(M).join('<span class="andw">and</span>');
+const $ = (s, r = document) => r.querySelector(s);
+
+/* =====================================================================
+   4. PROBLEM BANK (verified: every problem has exactly one correct answer)
+   ===================================================================== */
+/* ---- Problem bank. "□" is the missing exponent. "~" = invisible multiplication.
+   [a|b] = stacked fraction. sol = [label, math] worked-solution lines. ---- */
+const LEVELS = [null,
+  { name: 'Level 1', desc: 'One property' },
+  { name: 'Level 2', desc: 'Two properties' },
+  { name: 'Level 3', desc: 'Three or more properties' }];
+
+/* Problems used in the "together" part of the lesson */
+const TPROBS = {
+  t1: { eq: 'x^□ * x^4 = x^9', ans: 5,
+    sol: [['Product of powers', 'x^□ * x^4 = x^{□+4}'], ['Match the exponents', '□ + 4 = 9'], ['Solve', '□ = 5']] },
+  t2: { eq: '(x^□)^3 = x^12', ans: 4,
+    sol: [['Power of a power', '(x^□)^3 = x^{3~□}'], ['Match the exponents', '3~□ = 12'], ['Solve', '□ = 4']] },
+  t3: { eq: '[x^9|x^□] = x^4', ans: 5,
+    sol: [['Quotient of powers', '[x^9|x^□] = x^{9−□}'], ['Match the exponents', '9 − □ = 4'], ['Solve', '□ = 5']] },
+  t4: { eq: '(x^2 * x^□)^3 = x^18', ans: 4,
+    sol: [['Product of powers (inside the parentheses)', 'x^2 * x^□ = x^{2+□}'],
+          ['Power of a power', '(x^{2+□})^3 = x^{3~(2+□)}'],
+          ['Match the exponents', '3~(2+□) = 18 → 2 + □ = 6'], ['Solve', '□ = 4']] },
+  t5: { eq: '[(x^□)^4|x^3] = x^17', ans: 5,
+    sol: [['Power of a power', '(x^□)^4 = x^{4~□}'],
+          ['Quotient of powers', '[x^{4~□}|x^3] = x^{4~□ − 3}'],
+          ['Match the exponents', '4~□ − 3 = 17 → 4~□ = 20'], ['Solve', '□ = 5']] },
+  t6: { eq: '(x^3 * y^□)^2 = x^6~y^10', ans: 5,
+    sol: [['Power of a product', '(x^3 * y^□)^2 = (x^3)^2 * (y^□)^2'],
+          ['Power of a power', '(x^3)^2 * (y^□)^2 = x^6 * y^{2~□}'],
+          ['Match the y exponents', '2~□ = 10'], ['Solve', '□ = 5']] }
+};
+
+/* Self-paced practice problems */
+const PROBLEMS = [
+  /* ---- Level 1: one property ---- */
+  { id: 'p1', lvl: 1, eq: '3^□ * 3^5 = 3^9', ans: 4,
+    hint: 'Combine the left side with the product of powers, then match the exponents.',
+    sol: [['Product of powers', '3^□ * 3^5 = 3^{□+5}'], ['Match the exponents', '□ + 5 = 9'], ['Solve', '□ = 4']] },
+  { id: 'p2', lvl: 1, eq: '(y^□)^5 = y^20', ans: 4,
+    hint: 'The left side is a power of a power. Rewrite it as a single power, then match.',
+    sol: [['Power of a power', '(y^□)^5 = y^{5~□}'], ['Match the exponents', '5~□ = 20'], ['Solve', '□ = 4']] },
+  { id: 'p3', lvl: 1, eq: '[x^12|x^□] = x^7', ans: 5,
+    hint: 'Use the quotient of powers on the left, then match the exponents.',
+    sol: [['Quotient of powers', '[x^12|x^□] = x^{12−□}'], ['Match the exponents', '12 − □ = 7'], ['Solve', '□ = 5']] },
+  { id: 'p4', lvl: 1, eq: '(2~x^□)^3 = 8~x^6', ans: 2,
+    hint: 'Raise each factor inside the parentheses to the 3rd power. Match the number and the exponent.',
+    sol: [['Power of a product', '(2~x^□)^3 = 2^3 ~ (x^□)^3'],
+          ['Power of a power', '2^3 ~ (x^□)^3 = 8~x^{3~□}'],
+          ['Match the exponents', '3~□ = 6'], ['Solve', '□ = 2']] },
+
+  /* ---- Level 2: two properties ---- */
+  { id: 'p5', lvl: 2, eq: '(x^4)^2 * x^□ = x^13', ans: 5,
+    hint: 'Simplify $(x^4)^2$ first, then use the product of powers.',
+    sol: [['Power of a power', '(x^4)^2 = x^8'], ['Product of powers', 'x^8 * x^□ = x^{8+□}'],
+          ['Match the exponents', '8 + □ = 13'], ['Solve', '□ = 5']] },
+  { id: 'p6', lvl: 2, eq: 'x^□ * y^3 * x^2 * y^4 = x^9~y^7', ans: 7,
+    hint: 'Group the $x$’s together and the $y$’s together, then use the product of powers.',
+    sol: [['Group the same bases', 'x^□ * y^3 * x^2 * y^4 = (x^□ * x^2)~(y^3 * y^4)'],
+          ['Product of powers', '(x^□ * x^2)~(y^3 * y^4) = x^{□+2}~y^7'],
+          ['Match the x exponents', '□ + 2 = 9'], ['Solve', '□ = 7']] },
+  { id: 'p7', lvl: 2, eq: '[(x^5)^□|x^6] = x^9', ans: 3,
+    hint: 'Handle the power of a power on top first, then use the quotient of powers.',
+    sol: [['Power of a power', '(x^5)^□ = x^{5~□}'],
+          ['Quotient of powers', '[x^{5~□}|x^6] = x^{5~□ − 6}'],
+          ['Match the exponents', '5~□ − 6 = 9 → 5~□ = 15'], ['Solve', '□ = 3']] },
+  { id: 'p8', lvl: 2, eq: '([x^□|x^2])^3 = x^12', ans: 6,
+    hint: 'Simplify inside the parentheses first, then raise the result to the 3rd power.',
+    sol: [['Quotient of powers (inside the parentheses)', '[x^□|x^2] = x^{□−2}'],
+          ['Power of a power', '(x^{□−2})^3 = x^{3~(□−2)}'],
+          ['Match the exponents', '3~(□ − 2) = 12 → □ − 2 = 4'], ['Solve', '□ = 6']] },
+  { id: 'p9', lvl: 2, eq: '[x^15|(x^□)^3] = x^6', ans: 3,
+    hint: 'Simplify the power of a power in the denominator first, then use the quotient of powers.',
+    sol: [['Power of a power', '(x^□)^3 = x^{3~□}'],
+          ['Quotient of powers', '[x^15|x^{3~□}] = x^{15 − 3~□}'],
+          ['Match the exponents', '15 − 3~□ = 6 → 3~□ = 9'], ['Solve', '□ = 3']] },
+  { id: 'p10', lvl: 2, eq: '(3~x^2)^□ = 27~x^6', ans: 3,
+    hint: 'Raise both the $3$ and the $x^2$ to the unknown power. Both parts must match the right side.',
+    sol: [['Power of a product', '(3~x^2)^□ = 3^□ ~ (x^2)^□'],
+          ['Power of a power', '3^□ ~ (x^2)^□ = 3^□ ~ x^{2~□}'],
+          ['Match the exponents', '3^□ = 27 and 2~□ = 6'], ['Solve', '□ = 3']] },
+  { id: 'p11', lvl: 2, eq: '(x^□ * y^3)^2 = x^8~y^6', ans: 4,
+    hint: 'Raise each factor to the 2nd power, then match the $x$ exponents.',
+    sol: [['Power of a product', '(x^□ * y^3)^2 = (x^□)^2 * (y^3)^2'],
+          ['Power of a power', '(x^□)^2 * (y^3)^2 = x^{2~□} * y^6'],
+          ['Match the x exponents', '2~□ = 8'], ['Solve', '□ = 4']] },
+
+  /* ---- Level 3: three or more properties ---- */
+  { id: 'p12', lvl: 3, eq: '[(x^3)^□ * x^2|x^5] = x^9', ans: 4,
+    hint: 'Work from the inside out: power of a power, then product, then quotient.',
+    sol: [['Power of a power', '(x^3)^□ = x^{3~□}'],
+          ['Product of powers', 'x^{3~□} * x^2 = x^{3~□ + 2}'],
+          ['Quotient of powers', '[x^{3~□ + 2}|x^5] = x^{3~□ + 2 − 5}'],
+          ['Match the exponents', '3~□ + 2 − 5 = 9 → 3~□ = 12'], ['Solve', '□ = 4']] },
+  { id: 'p13', lvl: 3, eq: '[(x^□ * x^3)^2|x^4] = x^12', ans: 5,
+    hint: 'Simplify inside the parentheses first, then apply the power, then divide.',
+    sol: [['Product of powers (inside the parentheses)', 'x^□ * x^3 = x^{□+3}'],
+          ['Power of a power', '(x^{□+3})^2 = x^{2~(□+3)}'],
+          ['Quotient of powers', '[x^{2~(□+3)}|x^4] = x^{2~(□+3) − 4}'],
+          ['Match the exponents', '2~(□ + 3) − 4 = 12 → 2~(□ + 3) = 16 → □ + 3 = 8'], ['Solve', '□ = 5']] },
+  { id: 'p14', lvl: 3, eq: '(2~x^□)^3 * x^2 = 8~x^11', ans: 3,
+    hint: 'Raise $(2x^□)$ to the 3rd power first, then multiply by $x^2$.',
+    sol: [['Power of a product', '(2~x^□)^3 = 2^3 ~ (x^□)^3 = 8~x^{3~□}'],
+          ['Product of powers', '8~x^{3~□} * x^2 = 8~x^{3~□ + 2}'],
+          ['Match the exponents', '3~□ + 2 = 11 → 3~□ = 9'], ['Solve', '□ = 3']] },
+  { id: 'p15', lvl: 3, eq: '[(x^7 * y^□)^2|x^4~y] = x^10~y^7', ans: 4,
+    hint: 'Use the power of a product on top, then divide the $x$’s and the $y$’s separately.',
+    sol: [['Power of a product, then power of a power', '(x^7 * y^□)^2 = (x^7)^2 * (y^□)^2 = x^14~y^{2~□}'],
+          ['Quotient of powers (x)', '[x^14|x^4] = x^10'],
+          ['Quotient of powers (y)', '[y^{2~□}|y] = y^{2~□ − 1}'],
+          ['Match the y exponents', '2~□ − 1 = 7 → 2~□ = 8'], ['Solve', '□ = 4']] },
+  { id: 'p16', lvl: 3, eq: '[((x^□)^2 * x^3)^2|x^5] = x^21', ans: 5,
+    hint: 'Work from the innermost parentheses outward, one property at a time.',
+    sol: [['Power of a power (inside)', '(x^□)^2 = x^{2~□}'],
+          ['Product of powers (inside)', 'x^{2~□} * x^3 = x^{2~□ + 3}'],
+          ['Power of a power', '(x^{2~□ + 3})^2 = x^{2~(2~□ + 3)}'],
+          ['Quotient of powers', '[x^{2~(2~□ + 3)}|x^5] = x^{2~(2~□ + 3) − 5}'],
+          ['Match the exponents', '2~(2~□ + 3) − 5 = 21 → 2~(2~□ + 3) = 26 → 2~□ + 3 = 13 → 2~□ = 10'], ['Solve', '□ = 5']] },
+  { id: 'p17', lvl: 3, eq: '[(4~x^□)^2|2~x^3] = 8~x^7', ans: 5,
+    hint: 'Raise the top to the 2nd power, then divide the numbers and the $x$’s separately.',
+    sol: [['Power of a product, then power of a power', '(4~x^□)^2 = 4^2 ~ (x^□)^2 = 16~x^{2~□}'],
+          ['Quotient of powers', '[16~x^{2~□}|2~x^3] = 8~x^{2~□ − 3}'],
+          ['Match the exponents', '2~□ − 3 = 7 → 2~□ = 10'], ['Solve', '□ = 5']] }
+];
+
+
+const NUM = PROBLEMS.length;
+const TOGETHER = TPROBS;
+const TSTEPS = [
+  { k: 'info', title: 'Find the missing exponent',
+    body: 'On the final exam, one exponent will be missing from each problem. Your job is to figure out what number goes in the box to make the equation true.',
+    list: [['Look at the box', 'Which exponent is missing, and what is it doing?'],
+           ['Simplify with a property', 'Combine the exponents you can, one property at a time.'],
+           ['Match the exponents', 'Make the exponent on the left equal the exponent on the right.'],
+           ['Solve and check', 'Solve for the box, then put your answer back in to check.']],
+    foot: 'We’ll do a few together. Then you’ll practice on your own.' },
+  { k: 'num', lab: 'Warm-up', pr: 'a1', p: TOGETHER.t1,
+    note: 'One property, to get everyone started. Ask: what is the box doing? What do the exponents on the left have to add up to?' },
+  { k: 'num', lab: 'Warm-up', pr: 'a2', p: TOGETHER.t2,
+    note: 'Power of a power. Expect a few students to answer 9 (adding). Ask what $(x^□)^3$ looks like expanded.' },
+  { k: 'num', lab: 'Box in the denominator', pr: 'a3', p: TOGETHER.t3,
+    note: 'The box is subtracted. Expect 13 (adding). Ask why $9 − □$ has to equal 4.' },
+  { k: 'mc', lab: 'Which properties?', p: TOGETHER.t4, q: 'Which two properties do we need to simplify the left side?',
+    options: ['Product of powers, then power of a power', 'Power of a product, then quotient of powers', 'Quotient of powers, then product of powers', 'Only the product of powers'], ans: 0,
+    explain: 'Inside the parentheses, $x^2 · x^□$ is a product of powers. Then the whole thing is raised to the 3rd power: a power of a power.',
+    note: 'Name the properties out loud before anyone solves. This is the new skill today: spotting more than one.' },
+  { k: 'num', lab: 'Two properties', pr: 'a4', p: TOGETHER.t4,
+    note: 'Work from the inside out. Have a student explain each step before you reveal the worked solution.' },
+  { k: 'mc', lab: 'Which properties?', p: TOGETHER.t5, q: 'Which two properties do we need here?',
+    options: ['Power of a power, then quotient of powers', 'Product of powers, then power of a product', 'Quotient of powers only', 'Power of a product, then product of powers'], ans: 0,
+    explain: '$(x^□)^4$ is a power of a power. Dividing by $x^3$ is a quotient of powers.' },
+  { k: 'num', lab: 'Two properties', pr: 'a5', p: TOGETHER.t5,
+    note: 'The setup is $4□ − 3 = 17$. Students who get 3.5 or 14 usually combined the steps in the wrong order.' },
+  { k: 'num', lab: 'Two properties, two variables', pr: 'a6', p: TOGETHER.t6,
+    note: 'Only the y exponent has a box, so match the y exponents. The x exponents already agree.' },
+  { k: 'info', title: 'Your turn to practice',
+    body: 'You’ll work through ' + NUM + ' problems at your own pace, from one property up to three or more at once.',
+    list: [['Check your answer', 'You get feedback right away, and you can try again.'],
+           ['Use a hint', 'After two misses, a hint appears.'],
+           ['See the worked solution', 'Stuck? Open it after a few tries. It also shows after you get it right.']],
+    foot: 'The levels get harder as you go. Your teacher can see how everyone is doing.' }
+];
+TSTEPS.forEach(s => { if (s.k === 'num') s.fields = [{ pre: '□ =', ans: s.p.ans }]; });
+
+/* =====================================================================
+   5. STATE
+   ===================================================================== */
+const S = { role: null, code: null, sid: null, name: '', phase: 'together', idx: 0, revealed: false, resp: {}, students: {},
+            prac: {}, mine: {}, pi: 0, fb: null, showNames: true, notes: false, selP: null, ended: false, watchIdx: -1, draft: {} };
+const unsubs = {};
+function watch(key, path, cb) { if (unsubs[key]) unsubs[key](); unsubs[key] = DB.on(path, cb); }
+function unwatchAll() { Object.keys(unsubs).forEach(k => { unsubs[k](); delete unsubs[k]; }); }
+const ls = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => localStorage.setItem(k, JSON.stringify(v)), del: k => localStorage.removeItem(k) };
+const rid = () => Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-3);
+const genCode = () => Array.from({ length: 4 }, () => 'BCDFGHJKMNPQRSTVWXZ'[Math.floor(Math.random() * 19)]).join('');
+const joinURL = () => location.href.split('#')[0].split('?')[0];
+const base = () => `sessions/${S.code}`;
+const statusOf = r => (!r || !r.n) ? 'none' : r.ok ? ((r.n === 1 && !r.s) ? 'first' : 'retry') : 'wrong';
+const pnum = p => PROBLEMS.indexOf(p) + 1;
+function isCorrectT(st, v) { if (v == null) return false; return st.k === 'num' ? v === String(st.p.ans) : v === String(st.ans); }
+
+/* =====================================================================
+   6. SHARED RENDER PIECES
+   ===================================================================== */
+const chipT = st => `<span class="pill">Phase 2: Missing exponents</span>` + (st.lab ? ` <span class="pill phase">${esc(st.lab)}</span>` : '');
+function infoHTML(st, cls) {
+  let h = `<p class="${cls}">${st.body}</p>`;
+  if (st.list) h += `<ol class="moves">${st.list.map((it, i) => `<li><span class="n">${i + 1}</span><div><b>${esc(it[0])}</b><span class="t">${esc(it[1])}</span></div></li>`).join('')}</ol>`;
+  if (st.foot) h += `<p class="${cls} info-foot">${st.foot}</p>`;
+  return h;
+}
+function solHTML(p, title) {
+  const lines = p.sol.map(([l, m]) => `<li><span class="sl">${esc(l)}</span><div class="sm">${mathLine(m)}</div></li>`).join('');
+  const chk = `<li class="chk"><span class="sl">Check</span><div class="sm">${M(p.eq.replace(/□/g, String(p.ans)))}</div></li>`;
+  return `<div class="sol"><h3>${title || 'Worked solution'}</h3><ol>${lines}${chk}</ol></div>`;
+}
+function fieldsHTML(st, vals, disabled) {
+  return `<div class="fields">` + st.fields.map((f, i) =>
+    `<span class="fld">${M(f.pre)}<input class="num" data-i="${i}" inputmode="numeric" autocomplete="off" aria-label="Missing exponent" placeholder="?" value="${esc(vals == null ? '' : vals)}" ${disabled ? 'disabled' : ''}></span>`).join('') + `</div>`;
+}
+function optsHTML(st, sel, locked) {
+  return `<div class="opts">` + st.options.map((o, i) => {
+    let c = 'opt';
+    if (S.revealed) { if (i === st.ans) c += ' right'; else if (String(i) === sel) c += ' wrong'; }
+    else if (String(i) === sel) c += ' sel';
+    return `<button class="${c}" data-act="pick" data-i="${i}" ${locked ? 'disabled' : ''}><b>${'ABCD'[i]}</b><span>${esc(o)}</span></button>`;
+  }).join('') + `</div>`;
+}
+const eqBlock = (p, cls) => `<div class="eq-wrap"><div class="expr ${cls}">${M(p.eq)}</div></div>`;
+
+/* =====================================================================
+   7. LANDING
+   ===================================================================== */
+function renderLanding(msg, teacherOpen) {
+  const saved = ls.get('expprac:student') || {};
+  const tsaved = ls.get('expprac:teacher');
+  const qcode = (new URLSearchParams(location.search).get('code') || saved.code || '').toUpperCase();
+  const showT = teacherOpen || new URLSearchParams(location.search).has('teacher');
+  $('#app').innerHTML = `<div class="landing">
+    <h1>Find the missing exponent</h1>
+    <p class="sub">Work out which value in the box makes each equation true.</p>
+    ${DB.mode === 'local' ? `<div class="banner"><b>Practice mode.</b> Firebase isn’t set up, so this only syncs between tabs of this browser.</div>` : ''}
+    ${showT ? `
+      <div class="card">
+        <h2 style="font-size:1.2rem;margin-bottom:12px">Teacher</h2>
+        <div class="row" style="margin-top:0">
+          <button class="btn" data-act="newsession">Start a new session</button>
+          ${tsaved ? `<button class="ghost" data-act="resume">Resume ${esc(tsaved.code)}</button>` : ''}
+        </div>
+        <p class="err" id="err">${esc(msg || '')}</p>
+        <p class="teacher-link"><button data-act="studentpanel">I’m a student</button></p>
+      </div>` : `
+      <div class="card">
+        <label for="code" style="margin-top:0">Class code</label>
+        <input id="code" class="txt code-in" maxlength="4" autocomplete="off" value="${esc(qcode)}" placeholder="ABCD">
+        <label for="name">Your first name</label>
+        <input id="name" class="txt" maxlength="20" autocomplete="off" value="${esc(saved.name || '')}" placeholder="First name">
+        <div class="row"><button class="btn" data-act="join">Join class</button></div>
+        <p class="err" id="err">${esc(msg || '')}</p>
+      </div>
+      <p class="teacher-link">Teacher? <button data-act="teacherpanel">Open teacher controls</button></p>`}
+  </div>`;
+}
+
+/* =====================================================================
+   8. TEACHER
+   ===================================================================== */
+async function newSession() {
+  try {
+    let code;
+    for (let i = 0; i < 12; i++) { code = genCode(); if (!(await DB.once(`sessions/${code}/state`))) break; }
+    await DB.set(`sessions/${code}`, { app: 'practice', state: { phase: 'together', idx: 0, revealed: false, t: Date.now() }, created: Date.now() });
+    ls.set('expprac:teacher', { code });
+    startTeacher(code);
+  } catch (e) { renderLanding('Could not reach Firebase. Check your config and database rules.', true); }
+}
+async function resumeSession() {
+  const t = ls.get('expprac:teacher'); if (!t) return;
+  try {
+    const st = await DB.once(`sessions/${t.code}/state`);
+    if (!st) { ls.del('expprac:teacher'); return renderLanding('That session no longer exists.', true); }
+    startTeacher(t.code);
+  } catch (e) { renderLanding('Could not reach Firebase.', true); }
+}
+function setScale(v) { v = Math.min(1.5, Math.max(.875, v)); ls.set('expprac:scale', v); document.documentElement.style.fontSize = (16 * v) + 'px'; }
+function startTeacher(code) {
+  setScale(ls.get('expprac:scale') || 1);
+  S.role = 'teacher'; S.code = code; S.watchIdx = -1; S.phase = 'together';
+  watch('state', `${base()}/state`, st => {
+    if (!st) return;
+    const phaseChanged = st.phase !== S.phase || S.watchIdx === -1;
+    S.phase = st.phase || 'together'; S.idx = st.idx || 0; S.revealed = !!st.revealed;
+    if (S.phase === 'together' && (st.idx !== S.watchIdx)) {
+      S.watchIdx = st.idx; S.resp = {};
+      watch('resp', `${base()}/responses/${S.idx}`, v => { S.resp = v || {}; renderResults(); });
+    }
+    if (phaseChanged) S.selP = null;
+    renderTeacher();
+  });
+  watch('students', `${base()}/students`, v => { S.students = v || {}; updateJoined(); renderResults(); renderDash(); });
+  watch('prac', `${base()}/practice`, v => { S.prac = v || {}; renderDash(); });
+}
+const setState = (phase, idx, revealed) => DB.set(`${base()}/state`, { phase, idx, revealed, t: Date.now() });
+
+function renderTeacher() {
+  const together = S.phase === 'together';
+  const st = TSTEPS[S.idx], total = TSTEPS.length;
+  let main, foot;
+  if (together) {
+    let stage = `<div>${chipT(st)}</div>`;
+    if (st.k === 'info') {
+      stage += `<h2 class="t-title" style="font-size:2.2rem">${esc(st.title)}</h2>${infoHTML(st, 't-q')}`;
+    } else {
+      stage += eqBlock(st.p, 't-eq');
+      stage += `<p class="t-q">${T(st.q || 'Find the value that goes in the box.')}</p>`;
+      if (st.k === 'num') stage += fieldsHTML(st, '', true);
+      if (st.k === 'mc') stage += optsHTML(st, null, true);
+      if (S.revealed) {
+        if (st.explain) stage += `<p class="explain">${T(st.explain)}</p>`;
+        if (st.k === 'num') stage += solHTML(st.p);
+      }
+    }
+    main = `<main class="t-grid"><section class="card stage">${stage}</section><aside class="card results" id="results"></aside></main>`;
+    const last = S.idx >= total - 1;
+    foot = `<button class="ghost" data-act="back" ${S.idx === 0 ? 'disabled' : ''}>Back</button>
+      <div class="prog">Step ${S.idx + 1} of ${total}<div class="meter"><span style="width:${((S.idx + 1) / total) * 100}%"></span></div></div>
+      ${st.k !== 'info' ? `<button class="btn alt" data-act="reveal" ${S.revealed ? 'disabled' : ''}>Reveal answer</button>` : ''}
+      <button class="btn" data-act="${last ? 'startprac' : 'next'}">${last ? 'Start practice' : 'Next step'}</button>
+      <span class="kbd">Keys: ← back, → next, R reveal, N notes</span>`;
+  } else {
+    main = `<main><div id="dash"></div></main>`;
+    foot = `<button class="ghost" data-act="backtogether">Back to class steps</button>
+      <div class="prog">Practice is open. Students work at their own pace.</div>`;
+  }
+  const notes = (!S.notes || !together) ? '' : `<div class="card notes"><h3>Teacher notes (hide before projecting)</h3>
+      ${st.k === 'num' ? `<p><b>Answer:</b> ${st.p.ans}</p>` : ''}${st.k === 'mc' ? `<p><b>Answer:</b> ${'ABCD'[st.ans]}</p>` : ''}
+      ${st.note ? `<p>${T(st.note)}</p>` : '<p>No specific notes for this step.</p>'}</div>`;
+  $('#app').innerHTML = `<div class="t-wrap">
+    <header class="t-top">
+      <div class="brand">Missing Exponents ${together ? '' : '· Practice'}</div>
+      <div class="join">Join at <span class="url">${esc(joinURL())}</span> with code <span class="code">${esc(S.code)}</span></div>
+      <div class="t-tools"><span class="pill" id="joined"></span>
+        <button class="ghost" data-act="smaller" aria-label="Smaller text">A−</button><button class="ghost" data-act="bigger" aria-label="Larger text">A+</button>
+        ${together ? '' : `<button class="ghost" data-act="names">Names: ${S.showNames ? 'shown' : 'hidden'}</button>`}
+        ${together ? `<button class="ghost" data-act="notes">${S.notes ? 'Hide notes' : 'Notes'}</button>` : ''}
+        <button class="ghost danger" data-act="end">End session</button></div>
+    </header>
+    ${DB.mode === 'local' ? `<div class="banner"><b>Practice mode.</b> Open this page in a second tab and join as a student with code <b>${esc(S.code)}</b>.</div>` : ''}
+    ${main}${notes}
+    <footer class="t-foot">${foot}</footer></div>`;
+  renderResults(); renderDash(); updateJoined();
+}
+function updateJoined() { const el = $('#joined'); if (el) el.textContent = `${Object.keys(S.students).length} joined`; }
+
+function renderResults() {
+  const el = $('#results'); if (!el || S.role !== 'teacher' || S.phase !== 'together') return;
+  const st = TSTEPS[S.idx], joined = Object.keys(S.students).length;
+  if (st.k === 'info') { el.innerHTML = `<h3>Class</h3><p class="rhead"><b>${joined}</b> students have joined.</p>`; return; }
+  const entries = Object.entries(S.resp), n = entries.length;
+  let html = `<h3>Live responses</h3><div class="rhead"><b>${n}</b> of ${joined} answered</div>`;
+  const groups = {};
+  entries.forEach(([, r]) => { groups[r.v] = (groups[r.v] || 0) + 1; });
+  const keys = st.k === 'mc' ? st.options.map((_, i) => String(i)) : Object.keys(groups).sort((a, b) => groups[b] - groups[a]);
+  const max = Math.max(1, ...keys.map(k => groups[k] || 0));
+  if (!keys.length) html += `<p style="color:var(--muted)">Waiting for answers…</p>`;
+  keys.forEach(k => {
+    const c = groups[k] || 0, right = S.revealed && isCorrectT(st, k);
+    const lab = st.k === 'mc' ? `<b>${'ABCD'[+k]}</b>` : esc(k);
+    html += `<div class="bar ${right ? 'right' : ''}"><div class="lab">${lab}</div><div class="track"><div class="fill" style="width:${(c / max) * 100}%"></div></div><div class="n">${c}</div></div>`;
+  });
+  if (S.revealed && n) {
+    const good = entries.filter(([, r]) => isCorrectT(st, r.v)).length;
+    html += `<p style="margin-top:12px"><b>${Math.round((good / n) * 100)}%</b> correct (${good} of ${n})</p>`;
+  }
+  el.innerHTML = html;
+}
+
+function renderDash() {
+  const el = $('#dash'); if (!el || S.role !== 'teacher' || S.phase !== 'practice') return;
+  const sids = Object.keys(S.students).sort((a, b) => (S.students[a].t || 0) - (S.students[b].t || 0));
+  const rows = sids.map((sid, i) => ({ sid, i, name: S.students[sid].name, rec: S.prac[sid] || {} }));
+  let active = 0, solved = 0, tries = 0, firsts = 0;
+  rows.forEach(r => { let any = false; PROBLEMS.forEach(p => { const s = statusOf(r.rec[p.id]); if (s !== 'none') { any = true; tries++; if (s === 'first') firsts++; if (s === 'first' || s === 'retry') solved++; } }); if (any) active++; });
+  const tiles = `<div class="tiles">
+    <div class="card tile"><b>${rows.length}</b><span>joined</span></div>
+    <div class="card tile"><b>${active}</b><span>have started</span></div>
+    <div class="card tile"><b>${solved}</b><span>problems solved</span></div>
+    <div class="card tile"><b>${tries ? Math.round((firsts / tries) * 100) + '%' : '–'}</b><span>solved on the first try</span></div></div>`;
+  const lvHead = LEVELS.slice(1).map((lv, i) => `<th class="lvh" colspan="${PROBLEMS.filter(p => p.lvl === i + 1).length}">${esc(lv.name)}: ${esc(lv.desc)}</th>`).join('');
+  const numHead = PROBLEMS.map((p, i) => `<th class="pn ${S.selP === p.id ? 'sel' : ''}"><button data-act="selp" data-pid="${p.id}" title="Problem ${i + 1}">${i + 1}</button></th>`).join('');
+  const body = rows.map(r => {
+    let stuck = null;
+    const cells = PROBLEMS.map((p, k) => {
+      const rec = r.rec[p.id], s = statusOf(rec);
+      const isStuck = s === 'wrong' && rec.n >= 3;
+      if (isStuck && stuck == null) stuck = k + 1;
+      const sym = s === 'first' ? '✓' : s === 'retry' ? '✓' : s === 'wrong' ? (rec.n) : '';
+      return `<td class="c ${isStuck ? 'stuck' : s}" title="${s === 'none' ? 'Not started' : rec.n + ' tries'}">${sym}</td>`;
+    }).join('');
+    const nm = S.showNames ? esc(r.name) : `Student ${r.i + 1}`;
+    return `<tr><td class="nm">${nm}${stuck ? `<span class="stuck-flag">stuck on ${stuck}</span>` : ''}</td>${cells}</tr>`;
+  }).join('');
+  const foot = PROBLEMS.map(p => {
+    let att = 0, ok = 0;
+    rows.forEach(r => { const s = statusOf(r.rec[p.id]); if (s !== 'none') { att++; if (s === 'first' || s === 'retry') ok++; } });
+    return `<td>${att ? Math.round((ok / att) * 100) + '%' : ''}</td>`;
+  }).join('');
+  const grid = rows.length ? `<div class="card gwrap"><table class="grid"><thead><tr><th></th>${lvHead}</tr><tr><th></th>${numHead}</tr></thead><tbody>${body}</tbody><tfoot><tr><td class="nm">solved / tried</td>${foot}</tr></tfoot></table>
+      <div class="legend"><span class="l1">Solved on first try</span><span class="l2">Solved after retries or a solution</span><span class="l3">Tried (number = attempts)</span><span class="l4">Stuck (3+ wrong)</span></div></div>`
+    : `<div class="card"><p>Waiting for students to join…</p></div>`;
+  let detail = '';
+  if (S.selP) {
+    const p = PROBLEMS.find(q => q.id === S.selP), wrongs = {};
+    let first = 0, retry = 0, wrong = 0, none = 0;
+    rows.forEach(r => {
+      const rec = r.rec[p.id], s = statusOf(rec);
+      if (s === 'first') first++; else if (s === 'retry') retry++; else if (s === 'wrong') wrong++; else none++;
+      if (rec && rec.w) rec.w.split(',').forEach(w => { if (w !== '') wrongs[w] = (wrongs[w] || 0) + 1; });
+    });
+    const wk = Object.keys(wrongs).sort((a, b) => wrongs[b] - wrongs[a]).slice(0, 6), mx = Math.max(1, ...wk.map(k => wrongs[k]));
+    detail = `<div class="card detail"><span class="pill">Problem ${pnum(p)} · ${esc(LEVELS[p.lvl].name)}</span>
+      <div class="eq-wrap"><div class="expr t-eq">${M(p.eq)}</div></div>
+      <p><b>Answer: ${p.ans}.</b> ${first} first try · ${retry} after retries · ${wrong} still working · ${none} not started</p>
+      <h3 style="margin:14px 0 6px;font-size:1rem">Wrong answers entered</h3>
+      ${wk.length ? wk.map(k => `<div class="bar"><div class="lab">${esc(k)}</div><div class="track"><div class="fill" style="width:${(wrongs[k] / mx) * 100}%"></div></div><div class="n">${wrongs[k]}</div></div>`).join('') : '<p style="color:var(--muted)">No wrong answers yet.</p>'}
+      ${solHTML(p, 'Worked solution (for you)')}</div>`;
+  }
+  el.innerHTML = tiles + grid + detail;
+}
+
+/* =====================================================================
+   9. STUDENT
+   ===================================================================== */
+async function joinSession() {
+  const code = ($('#code').value || '').toUpperCase().trim(), name = ($('#name').value || '').trim();
+  const msg = m => { const e = $('#err'); if (e) e.textContent = m; };
+  if (code.length !== 4) return msg('Enter the 4-letter class code.');
+  if (!name) return msg('Enter your first name.');
+  try {
+    const st = await DB.once(`sessions/${code}/state`);
+    if (!st) return msg('No class found with that code. Check it and try again.');
+    const app = await DB.once(`sessions/${code}/app`);
+    if (app !== 'practice') return msg('That code is for a different activity. Ask your teacher for the code on the screen.');
+    const prev = ls.get('expprac:student');
+    const sid = (prev && prev.sid) || rid();
+    await DB.set(`sessions/${code}/students/${sid}`, { name, t: Date.now() });
+    ls.set('expprac:student', { code, name, sid });
+    startStudent(code, name, sid);
+  } catch (e) { msg('Could not connect. Ask your teacher to check the setup.'); }
+}
+function startStudent(code, name, sid) {
+  Object.assign(S, { role: 'student', code, name, sid, ended: false, watchIdx: -1, mine: {}, fb: null, pi: -1 });
+  watch('mine', `${base()}/practice/${sid}`, v => { S.mine = v || {}; if (S.pi < 0) S.pi = Math.max(0, PROBLEMS.findIndex(p => !(S.mine[p.id] && S.mine[p.id].ok))); if (S.phase === 'practice') renderStudent(); });
+  watch('state', `${base()}/state`, st => {
+    if (!st) { S.ended = true; return renderStudent(); }
+    const prevPhase = S.phase;
+    S.phase = st.phase || 'together'; S.idx = st.idx || 0; S.revealed = !!st.revealed;
+    if (S.phase === 'together' && S.idx !== S.watchIdx) {
+      S.watchIdx = S.idx; S.resp = {}; S.respMine = null;
+      watch('resp', `${base()}/responses/${S.idx}/${S.sid}`, v => { S.respMine = v; renderStudent(); });
+    }
+    if (S.phase === 'practice' && prevPhase !== 'practice') { S.pi = Math.max(0, PROBLEMS.findIndex(p => !(S.mine[p.id] && S.mine[p.id].ok))); S.fb = null; }
+    renderStudent();
+  });
+}
+function renderStudent() {
+  const app = $('#app');
+  if (S.ended) { app.innerHTML = `<div class="s-wrap"><div class="card" style="margin-top:18vh;text-align:center"><h2 class="s-title">This session has ended</h2><p>Thanks for joining. You can close this page.</p><div class="row" style="justify-content:center;margin-top:16px"><button class="ghost" data-act="leave">Join another</button></div></div></div>`; return; }
+  const top = chip => `<div class="s-top"><div>${chip}</div><div class="who">${esc(S.name)} <button data-act="leave">Leave</button></div></div>`;
+  if (S.phase === 'practice') return renderPractice(top);
+  const st = TSTEPS[S.idx], mineV = S.respMine ? S.respMine.v : null, shown = S.draft[S.idx] != null ? S.draft[S.idx] : mineV;
+  let body = '';
+  if (st.k === 'info') {
+    body = `<h2 class="s-title">${esc(st.title)}</h2>${infoHTML(st, 's-q')}`;
+  } else {
+    body += eqBlock(st.p, 's-eq') + `<p class="s-q">${T(st.q || 'Find the value that goes in the box.')}</p>`;
+    if (st.k === 'num') {
+      body += fieldsHTML(st, shown, S.revealed);
+      if (!S.revealed) body += `<div class="row" style="margin-top:12px"><button class="btn" data-act="submit">${mineV != null ? 'Update answer' : 'Submit answer'}</button></div>`;
+    }
+    if (st.k === 'mc') body += optsHTML(st, mineV, S.revealed);
+    body += `<div class="err" id="err"></div>`;
+    if (!S.revealed && mineV != null) body += `<div class="ok">Submitted. You can change it until your teacher reveals.</div>`;
+    if (S.revealed) {
+      const ok = isCorrectT(st, mineV);
+      body += mineV == null ? `<div class="verdict none">You didn’t answer this one. Read the explanation below.</div>`
+        : ok ? `<div class="verdict good">Correct!</div>` : `<div class="verdict bad">Not quite. Look at how it works below.</div>`;
+      if (st.explain) body += `<p class="explain">${T(st.explain)}</p>`;
+      if (st.k === 'num') body += solHTML(st.p);
+    }
+  }
+  app.innerHTML = `<div class="s-wrap">${top(chipT(st))}<section class="card">${body}</section></div>`;
+}
+function renderPractice(top) {
+  const app = $('#app'), i = Math.min(Math.max(S.pi, 0), NUM - 1), p = PROBLEMS[i];
+  const rec = S.mine[p.id] || { n: 0, ok: false, s: 0, w: '' };
+  const solvedN = PROBLEMS.filter(q => S.mine[q.id] && S.mine[q.id].ok).length;
+  const nav = LEVELS.slice(1).map((lv, li) => `<div class="lvl"><span class="lvl-n">${esc(lv.name)}</span>${PROBLEMS.map((q, k) => q.lvl === li + 1 ?
+    `<button class="dot ${statusOf(S.mine[q.id])} ${k === i ? 'cur' : ''}" data-act="goto" data-i="${k}" aria-label="Problem ${k + 1}">${k + 1}</button>` : '').join('')}</div>`).join('');
+  const showSol = rec.ok || rec.s;
+  let body = `<div class="eq-wrap"><div class="expr s-eq">${M(p.eq)}</div></div>
+    <p class="s-q">Find the value that goes in the box.</p>
+    <div class="fields"><span class="fld">${M('□ =')}<input id="ans" class="num" inputmode="numeric" autocomplete="off" aria-label="Missing exponent" placeholder="?" value="${rec.ok ? p.ans : ''}" ${rec.ok ? 'disabled' : ''}></span>
+      ${rec.ok ? '' : `<button class="btn" data-act="check">Check</button>`}</div>`;
+  if (rec.ok) body += `<div class="verdict good">${rec.n === 1 && !rec.s ? 'Correct on the first try!' : 'Correct!'}</div>`;
+  else if (S.fb && S.fb.pid === p.id) body += `<div class="verdict ${S.fb.t === 'bad' ? 'bad' : 'none'}">${esc(S.fb.m)}</div>`;
+  if (!rec.ok && rec.n >= 2) body += `<div class="hintbox"><b>Hint:</b> ${T(p.hint)}</div>`;
+  if (!rec.ok && rec.n >= 3 && !rec.s) body += `<div class="row" style="margin-top:12px"><button class="ghost" data-act="showsol">Show the worked solution</button></div>`;
+  if (showSol) body += solHTML(p);
+  const all = solvedN === NUM ? `<div class="done-banner">You solved all ${NUM} problems. Nice work!</div>` : '';
+  app.innerHTML = `<div class="s-wrap">${top(`<span class="pill">Practice</span> <span class="pill phase">${esc(LEVELS[p.lvl].name)}: ${esc(LEVELS[p.lvl].desc)}</span>`)}
+    <div class="pmeter"><div class="row"><span>Solved ${solvedN} of ${NUM}</span><span>Problem ${i + 1}</span></div><div class="meter"><span style="width:${(solvedN / NUM) * 100}%"></span></div></div>
+    <div class="nav">${nav}</div>${all}
+    <section class="card">${body}</section>
+    <div class="pnav"><button class="ghost" data-act="pprev" ${i === 0 ? 'disabled' : ''}>Previous</button><button class="btn" data-act="pnext" ${i >= NUM - 1 ? 'disabled' : ''}>Next problem</button></div></div>`;
+  const inp = $('#ans'); if (inp && !rec.ok && S.focusAns) { inp.focus(); S.focusAns = false; }
+}
+async function checkPractice() {
+  const p = PROBLEMS[S.pi], cur = S.mine[p.id] || {};
+  if (cur.ok) return;
+  const inp = $('#ans'), raw = inp ? inp.value.trim() : '';
+  if (raw === '' || isNaN(Number(raw))) { S.fb = { pid: p.id, t: 'err', m: 'Enter a number in the box.' }; S.focusAns = true; return renderStudent(); }
+  const v = Number(raw), rec = { n: (cur.n || 0) + 1, ok: !!cur.ok, s: cur.s || 0, w: cur.w || '', t: Date.now() };
+  if (v === p.ans) { rec.ok = true; S.fb = null; }
+  else {
+    const w = rec.w ? rec.w.split(',') : []; w.push(String(v)); rec.w = w.slice(-10).join(',');
+    S.fb = { pid: p.id, t: 'bad', m: rec.n === 1 ? 'Not yet. Look at each side: which properties do you see?' : 'Not yet. Try the hint, then check each step.' };
+    S.focusAns = true;
+  }
+  S.mine[p.id] = rec; renderStudent();
+  try { await DB.set(`${base()}/practice/${S.sid}/${p.id}`, rec); } catch (e) {}
+}
+async function showSolution() {
+  const p = PROBLEMS[S.pi], cur = S.mine[p.id] || { n: 0, ok: false, w: '' };
+  const rec = Object.assign({}, cur, { s: 1, t: Date.now() }); S.mine[p.id] = rec; renderStudent();
+  try { await DB.set(`${base()}/practice/${S.sid}/${p.id}`, rec); } catch (e) {}
+}
+async function submit() {
+  const st = TSTEPS[S.idx], err = m => { const e = $('#err'); if (e) e.textContent = m; };
+  if (S.revealed || st.k !== 'num') return;
+  const raw = ($('.num').value || '').trim();
+  if (raw === '' || isNaN(Number(raw))) return err('Enter a number in the box.');
+  try { await DB.set(`${base()}/responses/${S.idx}/${S.sid}`, { name: S.name, v: String(Number(raw)), t: Date.now() }); delete S.draft[S.idx]; }
+  catch (e) { err('Could not submit. Check your connection and try again.'); }
+}
+async function pick(i) {
+  if (S.revealed) return;
+  try { await DB.set(`${base()}/responses/${S.idx}/${S.sid}`, { name: S.name, v: String(i), t: Date.now() }); } catch (e) {}
+}
+
+/* =====================================================================
+   10. EVENTS
+   ===================================================================== */
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const a = b.dataset.act;
+  if (a === 'join') return joinSession();
+  if (a === 'teacherpanel') return renderLanding('', true);
+  if (a === 'studentpanel') { history.replaceState(null, '', joinURL()); return renderLanding(); }
+  if (a === 'newsession') return newSession();
+  if (a === 'resume') return resumeSession();
+  if (a === 'leave') { unwatchAll(); ls.del('expprac:student'); S.role = null; S.ended = false; return renderLanding(); }
+  if (a === 'submit') return submit();
+  if (a === 'pick') return pick(b.dataset.i);
+  if (a === 'check') return checkPractice();
+  if (a === 'showsol') return showSolution();
+  if (a === 'goto') { S.pi = +b.dataset.i; S.fb = null; S.focusAns = true; return renderStudent(); }
+  if (a === 'pprev') { S.pi = Math.max(0, S.pi - 1); S.fb = null; S.focusAns = true; return renderStudent(); }
+  if (a === 'pnext') { S.pi = Math.min(NUM - 1, S.pi + 1); S.fb = null; S.focusAns = true; return renderStudent(); }
+  if (S.role !== 'teacher') return;
+  if (a === 'bigger' || a === 'smaller') return setScale((ls.get('expprac:scale') || 1) + (a === 'bigger' ? .125 : -.125));
+  if (a === 'names') { S.showNames = !S.showNames; return renderTeacher(); }
+  if (a === 'notes') { S.notes = !S.notes; return renderTeacher(); }
+  if (a === 'selp') { S.selP = S.selP === b.dataset.pid ? null : b.dataset.pid; return renderDash(); }
+  if (a === 'back' && S.idx > 0) return setState('together', S.idx - 1, false);
+  if (a === 'next' && S.idx < TSTEPS.length - 1) return setState('together', S.idx + 1, false);
+  if (a === 'reveal' && TSTEPS[S.idx].k !== 'info') return setState('together', S.idx, true);
+  if (a === 'startprac') return setState('practice', S.idx, false);
+  if (a === 'backtogether') return setState('together', S.idx, false);
+  if (a === 'end') {
+    if (!confirm('End this session and delete all responses?')) return;
+    await DB.remove(base()); unwatchAll(); ls.del('expprac:teacher'); document.documentElement.style.fontSize = ''; S.role = null; renderLanding('Session ended.', true);
+  }
+});
+document.addEventListener('input', e => {
+  if (S.role === 'student' && S.phase === 'together' && e.target.matches('.num')) S.draft[S.idx] = e.target.value;
+});
+document.addEventListener('keydown', e => {
+  if (S.role === 'student' && S.phase === 'practice' && e.key === 'Enter' && e.target.id === 'ans') { e.preventDefault(); return checkPractice(); }
+  if (S.role === 'student' && S.phase === 'together' && e.key === 'Enter' && e.target.matches('.num')) { e.preventDefault(); return submit(); }
+  if (S.role === null && e.key === 'Enter' && e.target.matches('#code,#name')) return joinSession();
+  if (S.role !== 'teacher' || S.phase !== 'together' || /INPUT|TEXTAREA/.test(e.target.tagName) || e.metaKey || e.ctrlKey) return;
+  const st = TSTEPS[S.idx];
+  if (e.key === 'ArrowRight' && S.idx < TSTEPS.length - 1) setState('together', S.idx + 1, false);
+  else if (e.key === 'ArrowLeft' && S.idx > 0) setState('together', S.idx - 1, false);
+  else if ((e.key === 'r' || e.key === 'R') && st.k !== 'info') setState('together', S.idx, true);
+  else if (e.key === 'n' || e.key === 'N') { S.notes = !S.notes; renderTeacher(); }
+});
+
+/* =====================================================================
+   11. BOOT
+   ===================================================================== */
+(function boot() {
+  const teacherMode = new URLSearchParams(location.search).has('teacher');
+  const ssaved = ls.get('expprac:student');
+  if (!teacherMode && ssaved && ssaved.code) {
+    DB.once(`sessions/${ssaved.code}/state`).then(async st => {
+      const app = st ? await DB.once(`sessions/${ssaved.code}/app`) : null;
+      if (st && app === 'practice') startStudent(ssaved.code, ssaved.name, ssaved.sid); else renderLanding();
+    }).catch(() => renderLanding());
+  } else renderLanding();
+})();
+</script>
+</body>
+</html>
