@@ -30,7 +30,10 @@ body{
 }
 .math{font-family:var(--math); white-space:nowrap}
 .math i{font-style:italic}
-sup{font-size:.74em; line-height:0}
+sup{font-size:.74em; line-height:0; white-space:nowrap}
+.frac{display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; margin:0 .12em; line-height:1.2}
+.frac>.np{padding:0 .28em .1em; border-bottom:.07em solid currentColor}
+.frac>.dp{padding:.12em .28em 0}
 button{font:inherit; cursor:pointer}
 :focus-visible{outline:3px solid var(--orange); outline-offset:2px}
 h1,h2,h3,p{margin:0}
@@ -79,8 +82,9 @@ textarea.txt:focus,input.txt:focus{border-color:var(--blue); outline:none}
 .chart{margin-top:18px; border:2px solid var(--orange); border-radius:12px; padding:14px 16px; background:var(--card)}
 .chart-row{display:grid; grid-template-columns:1.1fr 1.3fr 1.1fr 1.5fr; gap:8px 18px; padding:12px 0; border-top:1px solid var(--line)}
 .chart-row:first-of-type{border-top:0}
-.chart-row>div>span{display:block; font:600 .78rem var(--ui); color:var(--muted); margin-bottom:3px}
+.chart-row>div>span:first-child{display:block; font:600 .78rem var(--ui); color:var(--muted); margin-bottom:3px}
 .chart-row .prop{font-weight:700}
+.chart-row .prop .math{font-weight:400}
 .chart-row .math{white-space:normal; font-size:1.35rem}
 .ideas{margin-top:16px}
 .ideas h3{font-size:1rem; color:var(--muted); margin-bottom:8px}
@@ -135,7 +139,7 @@ textarea.txt:focus,input.txt:focus{border-color:var(--blue); outline:none}
 .stage .explain{font-size:1.35rem}
 .stage .chart-row .math{font-size:1.7rem}
 .stage .chart-row>div{font-size:1.15rem}
-.stage .chart-row>div>span{font-size:.85rem}
+.stage .chart-row>div>span:first-child{font-size:.85rem}
 .notes .chart-row .math{font-size:1.3rem}
 .results h3{font-size:1.05rem; margin-bottom:10px}
 .rhead{font-size:1.02rem; margin-bottom:12px}
@@ -233,11 +237,17 @@ const DB = (() => {
    T("How many $2$'s?") -> text with inline math between $...$.
    ===================================================================== */
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-function M(s) {
+function mathInner(s) {
   let t = esc(s);
   t = t.replace(/[a-z]/g, c => `<i>${c}</i>`);
   t = t.replace(/\^(\{[^}]*\}|<i>[a-z]<\/i>|-?\d+)/g, (m, g) => '<sup>' + g.replace(/^\{|\}$/g, '') + '</sup>');
-  t = t.replace(/\*/g, '·');
+  return t.replace(/\*/g, '·');
+}
+function M(s) {
+  const parts = [];
+  s = String(s).replace(/\[([^\[\]|]+)\|([^\[\]|]+)\]/g, (m, a, b) => { parts.push([a, b]); return '\u0001' + (parts.length - 1) + '\u0002'; });
+  let t = mathInner(s);
+  t = t.replace(/\u0001(\d+)\u0002/g, (m, i) => `<span class="frac"><span class="np">${mathInner(parts[i][0])}</span><span class="dp">${mathInner(parts[i][1])}</span></span>`);
   return `<span class="math">${t}</span>`;
 }
 const T = s => String(s).replace(/\$([^$]+)\$/g, (m, g) => M(g));
@@ -261,13 +271,13 @@ const ROUNDS = [
       prop: 'Power of a product', alg: '(a*b)^n = a^n * b^n',
       words: 'Raise every factor to the power.',
       example: '(2x)^3 = 2^3 * x^3 = 8x^3', why: '(2x)(2x)(2x) = (2*2*2)(x*x*x)' }, {
-      prop: 'Power of a quotient', alg: '(a/b)^n = a^n / b^n   (b ≠ 0)',
+      prop: 'Power of a quotient', alg: '(a/b)^n = a^n / b^n   (b ≠ 0)',
       words: 'Raise the numerator and the denominator to the power.',
       example: '(x/y)^3 = x^3 / y^3', why: '(x/y)(x/y)(x/y) = (x*x*x) / (y*y*y)' }] },
   { name: 'Quotient of powers', chart: [{
-      prop: 'Quotient of powers', alg: 'a^m / a^n = a^{m − n}   (a ≠ 0)',
+      prop: 'Quotient of powers', alg: '[a^m|a^n] = a^{m − n}   (a ≠ 0)',
       words: 'Same base: keep the base and subtract the exponents (top − bottom).',
-      example: 'x^5 / x^2 = x^3', why: '(x*x*x*x*x) / (x*x) = x*x*x' }] }
+      example: '[x^5|x^2] = x^3', why: '[x*x*x*x*x|x*x] = x*x*x' }] }
 ];
 
 const PHASE = { warm: 'Quick check', expand: 'Expand it', notice: 'Spot the pattern', predict: 'Predict it', stress: 'Stress test', rule: 'Your rule', info: '' };
@@ -406,29 +416,29 @@ const STEPS = [
     ph: 'When you raise a product or a quotient to a power, you…' },
 
   /* ---------- Round 4: quotient of powers ---------- */
-  { r: 4, type: 'num', phase: 'expand', expr: 'x^5 / x^2',
+  { r: 4, type: 'num', phase: 'expand', expr: '[x^5|x^2]',
     q: 'On paper, write out every factor and cancel matching pairs. How many $x$’s are left?',
     fields: [{ pre: '= x', sup: true, ans: 3 }],
-    expanded: '(x*x*x*x*x) / (x*x) = x*x*x', explain: 'Two pairs cancel, leaving three $x$’s on top: $x^3$.' },
-  { r: 4, type: 'num', phase: 'expand', expr: '7^6 / 7^4',
+    expanded: '[x*x*x*x*x|x*x] = x*x*x', explain: 'Two pairs cancel, leaving three $x$’s on top: $x^3$.' },
+  { r: 4, type: 'num', phase: 'expand', expr: '[7^6|7^4]',
     q: 'Cancel matching pairs. How many $7$’s are left?',
     fields: [{ pre: '= 7', sup: true, ans: 2 }],
-    expanded: '(7*7*7*7*7*7) / (7*7*7*7) = 7*7', explain: 'Four pairs cancel, leaving two $7$’s: $7^2$.' },
-  { r: 4, type: 'num', phase: 'expand', expr: 'y^8 / y^3',
+    expanded: '[7*7*7*7*7*7|7*7*7*7] = 7*7', explain: 'Four pairs cancel, leaving two $7$’s: $7^2$.' },
+  { r: 4, type: 'num', phase: 'expand', expr: '[y^8|y^3]',
     q: 'Cancel matching pairs. How many $y$’s are left?',
     fields: [{ pre: '= y', sup: true, ans: 5 }],
-    expanded: '(y*y*y*y*y*y*y*y) / (y*y*y) = y*y*y*y*y', explain: 'Three pairs cancel, leaving five $y$’s: $y^5$.' },
+    expanded: '[y*y*y*y*y*y*y*y|y*y*y] = y*y*y*y*y', explain: 'Three pairs cancel, leaving five $y$’s: $y^5$.' },
   { r: 4, type: 'text', phase: 'notice', title: 'What do you notice?',
-    table: { head: ['Problem', 'As one power'], rows: [['x^5 / x^2', 'x^3'], ['7^6 / 7^4', '7^2'], ['y^8 / y^3', 'y^5']] },
+    table: { head: ['Problem', 'As one power'], rows: [['[x^5|x^2]', 'x^3'], ['[7^6|7^4]', '7^2'], ['[y^8|y^3]', 'y^5']] },
     q: 'How do the exponents in the problem relate to the exponent in the answer? Which one is subtracted from which?', ph: 'I notice that…' },
-  { r: 4, type: 'num', phase: 'predict', expr: 'x^12 / x^5',
+  { r: 4, type: 'num', phase: 'predict', expr: '[x^12|x^5]',
     q: 'Predict without expanding. Write it as one power.',
     fields: [{ pre: '= x', sup: true, ans: 7 }],
     explain: 'Top exponent minus bottom exponent: $12 − 5 = 7$, so $x^7$.' },
-  { r: 4, type: 'mc', phase: 'stress', expr: 'x^2 / x^5',
+  { r: 4, type: 'mc', phase: 'stress', expr: '[x^2|x^5]',
     q: 'Cancel the matching $x$’s. What is left?',
-    options: ['$x^3$ on the top', '$x^3$ on the bottom, so $1 / x^3$', '$x^7$ on the top', 'Nothing is left, so it equals 0'], ans: 1,
-    explain: 'There are more $x$’s on the bottom, so three $x$’s stay in the denominator: $1 / x^3$. Next class we will see what “top minus bottom” says about this one.',
+    options: ['$x^3$ on the top', '$x^3$ on the bottom, so $[1|x^3]$', '$x^7$ on the top', 'Nothing is left, so it equals 0'], ans: 1,
+    explain: 'There are more $x$’s on the bottom, so three $x$’s stay in the denominator: $[1|x^3]$. Next class we will see what “top minus bottom” says about this one.',
     note: 'Teaser for negative exponents. Do not resolve it today.' },
   { r: 4, type: 'text', phase: 'rule', title: 'Write the rule', q: 'Finish the sentence: <b>When you divide powers that have the same base, you…</b>',
     ph: 'When you divide powers that have the same base, you…' },
