@@ -106,6 +106,7 @@ input.txt:focus{border-color:var(--blue); outline:none}
 .code-in{text-transform:uppercase; letter-spacing:.35em; font-weight:700; text-align:center}
 .teacher-link{margin-top:26px; font-size:.92rem; color:var(--muted)}
 .teacher-link button{background:none; border:0; color:var(--blue-d); text-decoration:underline; padding:0}
+.teacher-link a{color:var(--blue-d)}
 
 /* student */
 .s-wrap{max-width:760px; margin:0 auto; padding:14px 14px 80px}
@@ -518,7 +519,8 @@ function renderLanding(msg, teacherOpen) {
         <div class="row"><button class="btn" data-act="join">Join class</button></div>
         <p class="err" id="err">${esc(msg || '')}</p>
       </div>
-      <p class="teacher-link">Teacher? <button data-act="teacherpanel">Open teacher controls</button></p>`}
+      <p class="teacher-link">Teacher? <button data-act="teacherpanel">Open teacher controls</button></p>
+      <p class="teacher-link" style="margin-top:10px"><a href="../">← Choose a different activity</a></p>`}
   </div>`;
 }
 
@@ -700,7 +702,7 @@ async function joinSession() {
     const st = await DB.once(`sessions/${code}/state`);
     if (!st) return msg('No class found with that code. Check it and try again.');
     const app = await DB.once(`sessions/${code}/app`);
-    if (app !== 'practice') return msg('That code is for a different activity. Ask your teacher for the code on the screen.');
+    if (app !== 'practice') return msg('That code is for a different activity. Go back and choose “Discover the Exponent Rules.”');
     const prev = ls.get('expprac:student');
     const sid = (prev && prev.sid) || rid();
     await DB.set(`sessions/${code}/students/${sid}`, { name, t: Date.now() });
