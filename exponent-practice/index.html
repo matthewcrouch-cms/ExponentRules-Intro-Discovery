@@ -129,6 +129,11 @@ input.txt:focus{border-color:var(--blue); outline:none}
 .dot.wrong{background:var(--orange-soft); border-color:var(--orange); color:var(--orange)}
 .dot.cur{box-shadow:0 0 0 3px var(--blue)}
 .pnav{display:flex; justify-content:space-between; gap:10px; margin-top:18px}
+.tabs{display:flex; gap:8px; margin:0 0 12px}
+.tab{border:1.5px solid var(--line); background:var(--card); color:var(--ink); border-radius:10px; padding:8px 16px; font-weight:650}
+.tab.on{background:var(--blue-soft); border-color:var(--blue); color:var(--blue-d)}
+.tipbox{margin-top:14px; padding:10px 14px; border-left:5px solid var(--good); background:var(--good-soft); border-radius:0 10px 10px 0}
+.intro-line{color:var(--muted); margin:2px 0 14px}
 .done-banner{background:var(--good-soft); border:2px solid var(--good); color:var(--good); border-radius:12px; padding:14px 16px; font-weight:650; margin-bottom:14px}
 
 /* teacher */
@@ -405,6 +410,42 @@ const PROBLEMS = [
 ];
 
 
+/* "Try one like it" problems that follow each worked example in the independent mode. */
+const TRYIT = [
+  { id: 'u1', eq: 'x^□ * x^6 = x^15', ans: 9,
+    hint: 'Combine the left side with the product of powers, then match the exponents.',
+    sol: [['Product of powers', 'x^□ * x^6 = x^{□+6}'], ['Match the exponents', '□ + 6 = 15'], ['Solve', '□ = 9']] },
+  { id: 'u2', eq: '(y^□)^5 = y^35', ans: 7,
+    hint: 'The left side is a power of a power. Rewrite it as one power, then match.',
+    sol: [['Power of a power', '(y^□)^5 = y^{5~□}'], ['Match the exponents', '5~□ = 35'], ['Solve', '□ = 7']] },
+  { id: 'u3', eq: '[x^13|x^□] = x^6', ans: 7,
+    hint: 'Use the quotient of powers on the left: top exponent minus bottom exponent.',
+    sol: [['Quotient of powers', '[x^13|x^□] = x^{13−□}'], ['Match the exponents', '13 − □ = 6'], ['Solve', '□ = 7']] },
+  { id: 'u4', eq: '(x^□ * x^2)^3 = x^21', ans: 5,
+    hint: 'Simplify inside the parentheses first, then apply the power.',
+    sol: [['Product of powers (inside the parentheses)', 'x^□ * x^2 = x^{□+2}'],
+          ['Power of a power', '(x^{□+2})^3 = x^{3~(□+2)}'],
+          ['Match the exponents', '3~(□ + 2) = 21 → □ + 2 = 7'], ['Solve', '□ = 5']] },
+  { id: 'u5', eq: '[(x^□)^3|x^4] = x^14', ans: 6,
+    hint: 'Handle the power of a power on top first, then use the quotient of powers.',
+    sol: [['Power of a power', '(x^□)^3 = x^{3~□}'],
+          ['Quotient of powers', '[x^{3~□}|x^4] = x^{3~□ − 4}'],
+          ['Match the exponents', '3~□ − 4 = 14 → 3~□ = 18'], ['Solve', '□ = 6']] },
+  { id: 'u6', eq: '(x^□ * y^4)^3 = x^21~y^12', ans: 7,
+    hint: 'Raise each factor to the 3rd power, then match the $x$ exponents.',
+    sol: [['Power of a product', '(x^□ * y^4)^3 = (x^□)^3 * (y^4)^3'],
+          ['Power of a power', '(x^□)^3 * (y^4)^3 = x^{3~□} * y^12'],
+          ['Match the x exponents', '3~□ = 21'], ['Solve', '□ = 7']] }
+];
+
+const LESSON = [
+  { ex: 't1', title: 'Multiplying powers', tip: 'Same base, multiplied: the exponents add. Set the exponents equal to each other and solve.' },
+  { ex: 't2', title: 'A power of a power', tip: 'A power of a power multiplies the exponents. Rewrite the left side as one power, then match.' },
+  { ex: 't3', title: 'Dividing powers, with the box on the bottom', tip: 'In a quotient the exponents subtract: top minus bottom. When the box is on the bottom, be careful about which exponent you subtract from which.' },
+  { ex: 't4', title: 'Two properties at once', tip: 'When two properties show up, work from the inside out and simplify one property at a time.' },
+  { ex: 't5', title: 'A power of a power, then a quotient', tip: 'Handle the power of a power first. Then divide by subtracting the exponents.' },
+  { ex: 't6', title: 'Two variables', tip: 'Raise each factor to the power. Then match the exponents of the variable that has the box. The other variable already matches.' }
+];
 const NUM = PROBLEMS.length;
 const TOGETHER = TPROBS;
 const TSTEPS = [
@@ -518,6 +559,11 @@ function renderLanding(msg, teacherOpen) {
         <input id="name" class="txt" maxlength="20" autocomplete="off" value="${esc(saved.name || '')}" placeholder="First name">
         <div class="row"><button class="btn" data-act="join">Join class</button></div>
         <p class="err" id="err">${esc(msg || '')}</p>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h2 style="font-size:1.1rem;margin-bottom:6px">No class code?</h2>
+        <p style="color:var(--muted);margin-bottom:12px">Work on your own: see how it works, then practice with feedback.</p>
+        <div class="row" style="margin-top:0"><button class="btn alt" data-act="solo">${ls.get('expprac:solo') ? 'Continue on my own' : 'Work on my own'}</button>${ls.get('expprac:solo') ? '<button class="ghost" data-act="soloreset">Start over</button>' : ''}</div>
       </div>
       <p class="teacher-link">Teacher? <button data-act="teacherpanel">Open teacher controls</button></p>
       <p class="teacher-link" style="margin-top:10px"><a href="../">← Choose a different activity</a></p>`}
@@ -711,7 +757,7 @@ async function joinSession() {
   } catch (e) { msg('Could not connect. Ask your teacher to check the setup.'); }
 }
 function startStudent(code, name, sid) {
-  Object.assign(S, { role: 'student', code, name, sid, ended: false, watchIdx: -1, mine: {}, fb: null, pi: -1 });
+  Object.assign(S, { role: 'student', solo: false, code, name, sid, ended: false, watchIdx: -1, mine: {}, fb: null, pi: -1 });
   watch('mine', `${base()}/practice/${sid}`, v => { S.mine = v || {}; if (S.pi < 0) S.pi = Math.max(0, PROBLEMS.findIndex(p => !(S.mine[p.id] && S.mine[p.id].ok))); if (S.phase === 'practice') renderStudent(); });
   watch('state', `${base()}/state`, st => {
     if (!st) { S.ended = true; return renderStudent(); }
@@ -728,6 +774,7 @@ function startStudent(code, name, sid) {
 function renderStudent() {
   const app = $('#app');
   if (S.ended) { app.innerHTML = `<div class="s-wrap"><div class="card" style="margin-top:18vh;text-align:center"><h2 class="s-title">This session has ended</h2><p>Thanks for joining. You can close this page.</p><div class="row" style="justify-content:center;margin-top:16px"><button class="ghost" data-act="leave">Join another</button></div></div></div>`; return; }
+  if (S.solo) return renderSolo();
   const top = chip => `<div class="s-top"><div>${chip}</div><div class="who">${esc(S.name)} <button data-act="leave">Leave</button></div></div>`;
   if (S.phase === 'practice') return renderPractice(top);
   const st = TSTEPS[S.idx], mineV = S.respMine ? S.respMine.v : null, shown = S.draft[S.idx] != null ? S.draft[S.idx] : mineV;
@@ -753,12 +800,7 @@ function renderStudent() {
   }
   app.innerHTML = `<div class="s-wrap">${top(chipT(st))}<section class="card">${body}</section></div>`;
 }
-function renderPractice(top) {
-  const app = $('#app'), i = Math.min(Math.max(S.pi, 0), NUM - 1), p = PROBLEMS[i];
-  const rec = S.mine[p.id] || { n: 0, ok: false, s: 0, w: '' };
-  const solvedN = PROBLEMS.filter(q => S.mine[q.id] && S.mine[q.id].ok).length;
-  const nav = LEVELS.slice(1).map((lv, li) => `<div class="lvl"><span class="lvl-n">${esc(lv.name)}</span>${PROBLEMS.map((q, k) => q.lvl === li + 1 ?
-    `<button class="dot ${statusOf(S.mine[q.id])} ${k === i ? 'cur' : ''}" data-act="goto" data-i="${k}" aria-label="Problem ${k + 1}">${k + 1}</button>` : '').join('')}</div>`).join('');
+function cardHTML(p, rec) {
   const showSol = rec.ok || rec.s;
   let body = `<div class="eq-wrap"><div class="expr s-eq">${M(p.eq)}</div></div>
     <p class="s-q">Find the value that goes in the box.</p>
@@ -769,16 +811,69 @@ function renderPractice(top) {
   if (!rec.ok && rec.n >= 2) body += `<div class="hintbox"><b>Hint:</b> ${T(p.hint)}</div>`;
   if (!rec.ok && rec.n >= 3 && !rec.s) body += `<div class="row" style="margin-top:12px"><button class="ghost" data-act="showsol">Show the worked solution</button></div>`;
   if (showSol) body += solHTML(p);
+  return body;
+}
+function renderPractice(top) {
+  const app = $('#app'), i = Math.min(Math.max(S.pi, 0), NUM - 1), p = PROBLEMS[i];
+  const rec = S.mine[p.id] || { n: 0, ok: false, s: 0, w: '' };
+  const solvedN = PROBLEMS.filter(q => S.mine[q.id] && S.mine[q.id].ok).length;
+  const nav = LEVELS.slice(1).map((lv, li) => `<div class="lvl"><span class="lvl-n">${esc(lv.name)}</span>${PROBLEMS.map((q, k) => q.lvl === li + 1 ?
+    `<button class="dot ${statusOf(S.mine[q.id])} ${k === i ? 'cur' : ''}" data-act="goto" data-i="${k}" aria-label="Problem ${k + 1}">${k + 1}</button>` : '').join('')}</div>`).join('');
   const all = solvedN === NUM ? `<div class="done-banner">You solved all ${NUM} problems. Nice work!</div>` : '';
   app.innerHTML = `<div class="s-wrap">${top(`<span class="pill">Practice</span> <span class="pill phase">${esc(LEVELS[p.lvl].name)}: ${esc(LEVELS[p.lvl].desc)}</span>`)}
     <div class="pmeter"><div class="row"><span>Solved ${solvedN} of ${NUM}</span><span>Problem ${i + 1}</span></div><div class="meter"><span style="width:${(solvedN / NUM) * 100}%"></span></div></div>
     <div class="nav">${nav}</div>${all}
-    <section class="card">${body}</section>
+    <section class="card">${cardHTML(p, rec)}</section>
     <div class="pnav"><button class="ghost" data-act="pprev" ${i === 0 ? 'disabled' : ''}>Previous</button><button class="btn" data-act="pnext" ${i >= NUM - 1 ? 'disabled' : ''}>Next problem</button></div></div>`;
   const inp = $('#ans'); if (inp && !rec.ok && S.focusAns) { inp.focus(); S.focusAns = false; }
 }
+
+/* ---------- independent ("on my own") mode ---------- */
+const curP = () => (S.solo && S.phase === 'learn') ? TRYIT[S.li] : PROBLEMS[S.pi];
+const firstUnsolved = () => Math.max(0, PROBLEMS.findIndex(p => !(S.mine[p.id] && S.mine[p.id].ok)));
+function saveSolo() { ls.set('expprac:solo', { mine: S.mine, phase: S.phase, li: S.li, pi: S.pi }); }
+async function persist(pid, rec) {
+  if (S.solo) return saveSolo();
+  try { await DB.set(`${base()}/practice/${S.sid}/${pid}`, rec); } catch (e) {}
+}
+function startSolo() {
+  unwatchAll();
+  const saved = ls.get('expprac:solo') || {};
+  Object.assign(S, { role: 'student', solo: true, ended: false, code: null, name: '', mine: saved.mine || {}, phase: saved.phase || 'learn',
+                     li: saved.li || 0, pi: typeof saved.pi === 'number' ? saved.pi : -1, lstep: {}, fb: null });
+  renderStudent();
+}
+function renderSolo() {
+  saveSolo();
+  const top = chip => `<div class="s-top"><div>${chip}</div><div class="who"><button data-act="soloexit">Home</button></div></div>
+    <div class="tabs"><button class="tab ${S.phase === 'learn' ? 'on' : ''}" data-act="solotab" data-t="learn">Examples</button><button class="tab ${S.phase === 'practice' ? 'on' : ''}" data-act="solotab" data-t="practice">Practice</button></div>`;
+  if (S.phase === 'practice') { if (S.pi < 0) S.pi = firstUnsolved(); return renderPractice(top); }
+  renderLearn(top);
+}
+function renderLearn(top) {
+  const i = S.li, ex = LESSON[i], p = TOGETHER[ex.ex], u = TRYIT[i], last = i >= LESSON.length - 1;
+  const rec = S.mine[u.id] || { n: 0, ok: false, s: 0, w: '' };
+  const lines = p.sol.map(([l, m]) => `<li><span class="sl">${esc(l)}</span><div class="sm">${mathLine(m)}</div></li>`);
+  lines.push(`<li class="chk"><span class="sl">Check</span><div class="sm">${M(p.eq.replace(/□/g, String(p.ans)))}</div></li>`);
+  const total = lines.length, done = rec.ok || rec.s, shown = done ? total : Math.min(S.lstep[i] || 0, total);
+  const tried = LESSON.filter((_, k) => { const r = S.mine[TRYIT[k].id]; return r && (r.ok || r.s); }).length;
+  let watch = `<h2 class="s-title">${esc(ex.title)}</h2>`;
+  if (i === 0 && shown === 0) watch += `<p class="intro-line">Every problem works the same way: simplify with a property, match the exponents, solve for the box, then check.</p>`;
+  watch += `<div class="eq-wrap"><div class="expr s-eq">${M(p.eq)}</div></div><p class="s-q">Find the value that goes in the box.${shown === 0 ? ' Before you click, think: what would you do first?' : ''}</p>`;
+  if (shown) watch += `<div class="sol"><h3>How to solve it</h3><ol>${lines.slice(0, shown).join('')}</ol></div>`;
+  watch += shown < total ? `<div class="row" style="margin-top:14px"><button class="btn alt" data-act="nextstep">${shown === 0 ? 'Show the first step' : 'Show the next step'}</button></div>`
+                         : `<div class="tipbox"><b>Remember:</b> ${T(ex.tip)}</div>`;
+  const tryCard = shown >= total ? `<section class="card" style="margin-top:14px"><span class="pill phase">Now you try one like it</span>${cardHTML(u, rec)}</section>` : '';
+  const hintNext = shown >= total && !done ? `<p class="intro-line" style="margin:10px 2px 0">Try the problem above first. You can also skip ahead.</p>` : '';
+  $('#app').innerHTML = `<div class="s-wrap">${top(`<span class="pill">On my own</span> <span class="pill phase">Example ${i + 1} of ${LESSON.length}</span>`)}
+    <div class="pmeter"><div class="row"><span>Tried ${tried} of ${LESSON.length} examples</span><span>Example ${i + 1}</span></div><div class="meter"><span style="width:${(tried / LESSON.length) * 100}%"></span></div></div>
+    <section class="card">${watch}</section>${tryCard}${hintNext}
+    <div class="pnav"><button class="ghost" data-act="lprev" ${i === 0 ? 'disabled' : ''}>Previous example</button>
+      <button class="btn" data-act="${last ? 'solopractice' : 'lnext'}">${last ? 'Start practice' : 'Next example'}</button></div></div>`;
+  const inp = $('#ans'); if (inp && !rec.ok && S.focusAns) { inp.focus(); S.focusAns = false; }
+}
 async function checkPractice() {
-  const p = PROBLEMS[S.pi], cur = S.mine[p.id] || {};
+  const p = curP(), cur = S.mine[p.id] || {};
   if (cur.ok) return;
   const inp = $('#ans'), raw = inp ? inp.value.trim() : '';
   if (raw === '' || isNaN(Number(raw))) { S.fb = { pid: p.id, t: 'err', m: 'Enter a number in the box.' }; S.focusAns = true; return renderStudent(); }
@@ -790,12 +885,12 @@ async function checkPractice() {
     S.focusAns = true;
   }
   S.mine[p.id] = rec; renderStudent();
-  try { await DB.set(`${base()}/practice/${S.sid}/${p.id}`, rec); } catch (e) {}
+  await persist(p.id, rec);
 }
 async function showSolution() {
-  const p = PROBLEMS[S.pi], cur = S.mine[p.id] || { n: 0, ok: false, w: '' };
+  const p = curP(), cur = S.mine[p.id] || { n: 0, ok: false, w: '' };
   const rec = Object.assign({}, cur, { s: 1, t: Date.now() }); S.mine[p.id] = rec; renderStudent();
-  try { await DB.set(`${base()}/practice/${S.sid}/${p.id}`, rec); } catch (e) {}
+  await persist(p.id, rec);
 }
 async function submit() {
   const st = TSTEPS[S.idx], err = m => { const e = $('#err'); if (e) e.textContent = m; };
@@ -824,6 +919,14 @@ document.addEventListener('click', async e => {
   if (a === 'leave') { unwatchAll(); ls.del('expprac:student'); S.role = null; S.ended = false; return renderLanding(); }
   if (a === 'submit') return submit();
   if (a === 'pick') return pick(b.dataset.i);
+  if (a === 'solo') return startSolo();
+  if (a === 'soloreset') { if (confirm('Erase your saved progress and start over?')) { ls.del('expprac:solo'); renderLanding(); } return; }
+  if (a === 'soloexit') { S.solo = false; S.role = null; return renderLanding(); }
+  if (a === 'solotab') { S.phase = b.dataset.t; S.fb = null; if (S.phase === 'practice' && S.pi < 0) S.pi = firstUnsolved(); return renderStudent(); }
+  if (a === 'solopractice') { S.phase = 'practice'; S.fb = null; if (S.pi < 0) S.pi = firstUnsolved(); return renderStudent(); }
+  if (a === 'nextstep') { S.lstep[S.li] = (S.lstep[S.li] || 0) + 1; return renderStudent(); }
+  if (a === 'lprev') { S.li = Math.max(0, S.li - 1); S.fb = null; return renderStudent(); }
+  if (a === 'lnext') { S.li = Math.min(LESSON.length - 1, S.li + 1); S.fb = null; return renderStudent(); }
   if (a === 'check') return checkPractice();
   if (a === 'showsol') return showSolution();
   if (a === 'goto') { S.pi = +b.dataset.i; S.fb = null; S.focusAns = true; return renderStudent(); }
@@ -848,7 +951,7 @@ document.addEventListener('input', e => {
   if (S.role === 'student' && S.phase === 'together' && e.target.matches('.num')) S.draft[S.idx] = e.target.value;
 });
 document.addEventListener('keydown', e => {
-  if (S.role === 'student' && S.phase === 'practice' && e.key === 'Enter' && e.target.id === 'ans') { e.preventDefault(); return checkPractice(); }
+  if (S.role === 'student' && (S.phase === 'practice' || S.solo) && e.key === 'Enter' && e.target.id === 'ans') { e.preventDefault(); return checkPractice(); }
   if (S.role === 'student' && S.phase === 'together' && e.key === 'Enter' && e.target.matches('.num')) { e.preventDefault(); return submit(); }
   if (S.role === null && e.key === 'Enter' && e.target.matches('#code,#name')) return joinSession();
   if (S.role !== 'teacher' || S.phase !== 'together' || /INPUT|TEXTAREA/.test(e.target.tagName) || e.metaKey || e.ctrlKey) return;
