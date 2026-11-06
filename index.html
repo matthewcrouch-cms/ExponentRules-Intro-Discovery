@@ -7,7 +7,7 @@
 <style>
 :root{
   --paper:#f7f9fc; --grid:#e3eaf3; --card:#ffffff; --ink:#14233a; --muted:#566883; --line:#d5deea;
-  --blue:#4B9CD3; --blue-d:#1d6aa5; --blue-soft:#e6f2fa; --orange:#F56600; --orange-soft:#fff0e5;
+  --blue:#4B9CD3; --blue-d:#1d6aa5; --blue-soft:#e6f2fa; --orange:#F56600; --orange-soft:#fff0e5; --good:#17805a; --good-soft:#e2f5ec;
   --math:"Cambria Math","STIX Two Text","Latin Modern Math",Cambria,Georgia,"Times New Roman",serif;
   --ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   color-scheme:light;
@@ -15,7 +15,7 @@
 @media (prefers-color-scheme: dark){
   :root{
     --paper:#0f1824; --grid:#17263a; --card:#16222f; --ink:#e8eef7; --muted:#9db0c8; --line:#2b3d55;
-    --blue:#6bb3e3; --blue-d:#8cc6ee; --blue-soft:#183249; --orange:#ff8a3d; --orange-soft:#3a2415; color-scheme:dark;
+    --blue:#6bb3e3; --blue-d:#8cc6ee; --blue-soft:#183249; --orange:#ff8a3d; --orange-soft:#3a2415; --good:#4fcf9b; --good-soft:#12352a; color-scheme:dark;
   }
 }
 *{box-sizing:border-box}
@@ -25,10 +25,10 @@ body{
   background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
   background-size:28px 28px; line-height:1.45; -webkit-text-size-adjust:100%;
 }
-.wrap{max-width:900px; margin:0 auto; padding:8vh 18px 48px}
+.wrap{max-width:1060px; margin:0 auto; padding:8vh 18px 48px}
 h1{font:700 clamp(2rem,6.5vw,3rem)/1.1 var(--math); margin:0 0 8px}
 .sub{font-size:1.2rem; color:var(--muted); margin:0 0 28px}
-.choices{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+.choices{display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:18px}
 .choice{
   display:flex; flex-direction:column; gap:10px; text-decoration:none; color:inherit;
   background:var(--card); border:2px solid var(--line); border-top-width:7px; border-radius:16px; padding:22px 22px 20px;
@@ -36,13 +36,16 @@ h1{font:700 clamp(2rem,6.5vw,3rem)/1.1 var(--math); margin:0 0 8px}
 }
 .choice.c1{border-top-color:var(--blue)}
 .choice.c2{border-top-color:var(--orange)}
+.choice.c3{border-top-color:var(--good)}
 .choice:hover{transform:translateY(-3px); box-shadow:0 8px 22px rgba(20,35,58,.14)}
 .choice.c1:hover{border-color:var(--blue)}
 .choice.c2:hover{border-color:var(--orange)}
+.choice.c3:hover{border-color:var(--good)}
 .choice:focus-visible{outline:3px solid var(--orange); outline-offset:3px}
 .tag{align-self:flex-start; font-size:.8rem; font-weight:700; padding:3px 11px; border-radius:99px}
 .c1 .tag{background:var(--blue-soft); color:var(--blue-d)}
 .c2 .tag{background:var(--orange-soft); color:var(--orange)}
+.c3 .tag{background:var(--good-soft); color:var(--good)}
 .demo{font-family:var(--math); font-size:clamp(1.8rem,5vw,2.4rem); padding:12px 0 6px; min-height:4.4rem; white-space:nowrap; overflow:hidden}
 .demo i{font-style:italic}
 sup{font-size:.74em; line-height:0}
@@ -53,6 +56,7 @@ sup .bx{width:.85em; height:.85em; vertical-align:-.1em}
 .go{margin-top:auto; padding-top:10px; font-weight:700; font-size:1.05rem}
 .c1 .go{color:var(--blue-d)}
 .c2 .go{color:var(--orange)}
+.c3 .go{color:var(--good)}
 .hint{margin-top:26px; color:var(--muted); font-size:.98rem}
 details{margin-top:34px; color:var(--muted); font-size:.92rem}
 summary{cursor:pointer; width:max-content}
@@ -85,6 +89,13 @@ details a{color:var(--blue-d)}
       <p>Work out which value in the box makes each equation true. Join your class or work on your own.</p>
       <span class="go">Start →</span>
     </a>
+    <a class="choice c3" href="exponent-game/">
+      <span class="tag">Team game</span>
+      <div class="demo" aria-hidden="true"><span>(2<i>x</i><sup>2</sup>)<sup>3</sup> = <span class="bx"></span><i>x</i><sup><span class="bx"></span></sup></span></div>
+      <h2>Exponent Showdown</h2>
+      <p>Race with your team to simplify, fill in the boxes, and climb the scoreboard.</p>
+      <span class="go">Start →</span>
+    </a>
   </div>
 
   <p class="hint">Not sure which one? Check with your teacher. Your class code only works in the activity your teacher started.</p>
@@ -94,6 +105,7 @@ details a{color:var(--blue-d)}
     <ul>
       <li><a href="exponent-discovery/?teacher">Discover the Exponent Rules: teacher view</a></li>
       <li><a href="exponent-practice/?teacher">Find the Missing Exponent: teacher view</a></li>
+      <li><a href="exponent-game/?teacher">Exponent Showdown: teacher view</a></li>
     </ul>
   </details>
 </main>
