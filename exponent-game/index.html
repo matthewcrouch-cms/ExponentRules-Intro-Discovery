@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Exponent Showdown</title>
+<style>
+:root{
+  --paper:#f7f9fc; --grid:#e3eaf3; --card:#ffffff; --ink:#14233a; --muted:#566883; --line:#d5deea;
+  --blue:#4B9CD3; --blue-d:#1d6aa5; --blue-soft:#e6f2fa; --orange:#F56600; --orange-soft:#fff0e5;
+  --good:#17805a; --good-soft:#e2f5ec; --bad:#b83a2b; --bad-soft:#fbeae7; --gold:#c98a00; --gold-soft:#fff5d6;
+  --math:"Cambria Math","STIX Two Text","Latin Modern Math",Cambria,Georgia,"Times New Roman",serif;
+  --ui:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --paper:#0f1824; --grid:#17263a; --card:#16222f; --ink:#e8eef7; --muted:#9db0c8; --line:#2b3d55;
+    --blue:#6bb3e3; --blue-d:#8cc6ee; --blue-soft:#183249; --orange:#ff8a3d; --orange-soft:#3a2415;
+    --good:#4fcf9b; --good-soft:#12352a; --bad:#ff8c7d; --bad-soft:#3a1c18; --gold:#ffc83d; --gold-soft:#3b3112; color-scheme:dark;
+  }
+  .btn,.btn.alt{color:#0f1824}
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{
+  font-family:var(--ui); color:var(--ink); background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:28px 28px; line-height:1.45; -webkit-text-size-adjust:100%;
+}
+.math{font-family:var(--math); white-space:nowrap}
+.math i{font-style:italic}
+sup{font-size:.74em; line-height:0; white-space:nowrap}
+button{font:inherit; cursor:pointer}
+:focus-visible{outline:3px solid var(--orange); outline-offset:2px}
+h1,h2,h3,p{margin:0}
+.frac{display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; margin:0 .12em; line-height:1.2}
+.frac>.np{padding:0 .28em .1em; border-bottom:.07em solid currentColor}
+.frac>.dp{padding:.12em .28em 0}
+
+.card{background:var(--card); border:1.5px solid var(--line); border-radius:14px; padding:20px}
+.pill{display:inline-block; font-size:.82rem; font-weight:600; padding:3px 11px; border-radius:99px; background:var(--blue-soft); color:var(--blue-d)}
+.pill.phase{background:var(--orange-soft); color:var(--orange)}
+.pill.gold{background:var(--gold-soft); color:var(--gold)}
+.btn{border:0; border-radius:10px; padding:11px 20px; font-weight:650; background:var(--blue-d); color:#fff}
+.btn:hover{filter:brightness(1.08)}
+.btn[disabled]{opacity:.45; cursor:not-allowed}
+.btn.alt{background:var(--orange); color:#fff}
+.ghost{background:transparent; color:var(--ink); border:1.5px solid var(--line); border-radius:10px; padding:8px 14px; font-weight:600}
+.ghost:hover{border-color:var(--blue)}
+.ghost.danger{color:var(--bad)}
+.ghost[disabled]{opacity:.45; cursor:not-allowed}
+.banner{background:var(--orange-soft); border:1.5px solid var(--orange); color:var(--ink); border-radius:10px; padding:9px 14px; font-size:.9rem; margin-bottom:14px}
+.expr{font-family:var(--math); line-height:1.35; white-space:normal}
+.eq-wrap{overflow-x:auto; padding:6px 0}
+.fields{display:flex; flex-wrap:wrap; gap:6px 10px; align-items:center; font-family:var(--math); font-size:2rem; margin:12px 0 6px}
+.fld{white-space:nowrap; display:inline-flex; align-items:center; gap:4px}
+input.num{font:600 1.15rem var(--ui); width:3.6em; padding:9px 6px; text-align:center; border:2px solid var(--line); border-radius:9px; background:var(--card); color:var(--ink)}
+input.num.sup{position:relative; top:-.9rem; width:3em}
+input.num:focus{border-color:var(--blue); outline:none}
+input.num[disabled]{background:transparent; opacity:1}
+input.num.ok{border-color:var(--good); background:var(--good-soft); color:var(--good)}
+input.num.bad{border-color:var(--bad); background:var(--bad-soft); color:var(--bad)}
+input.txt{width:100%; font:1.05rem var(--ui); padding:12px; border:2px solid var(--line); border-radius:10px; background:var(--card); color:var(--ink)}
+input.txt:focus{border-color:var(--blue); outline:none}
+.err{color:var(--bad); font-weight:600; min-height:1.4em; margin-top:8px}
+.ok-msg{color:var(--good); font-weight:600; margin-top:8px}
+.verdict{border-radius:10px; padding:10px 14px; font-weight:650; margin:14px 0 4px}
+.verdict.good{background:var(--good-soft); color:var(--good)}
+.verdict.bad{background:var(--bad-soft); color:var(--bad)}
+.verdict.none{background:var(--blue-soft); color:var(--blue-d)}
+.verdict.mid{background:var(--gold-soft); color:var(--gold)}
+
+.sol{margin:16px 0 4px; padding:14px 16px; border-left:5px solid var(--orange); background:var(--orange-soft); border-radius:0 10px 10px 0}
+.sol h3{font:700 .85rem var(--ui); color:var(--orange); margin-bottom:8px}
+.sol ol{margin:0; padding:0; list-style:none; display:grid; gap:10px}
+.sol li .sl{display:block; font:600 .85rem var(--ui); color:var(--muted)}
+.sol li .sm{font-size:1.45rem; overflow-x:auto}
+.answer-box{margin:14px 0 4px; padding:12px 16px; border:2px solid var(--good); background:var(--good-soft); border-radius:12px}
+.answer-box .lbl{font:700 .85rem var(--ui); color:var(--good); margin-bottom:2px}
+.answer-box .math{font-size:2rem}
+
+/* landing */
+.landing{max-width:520px; margin:0 auto; padding:9vh 18px 40px}
+.landing h1{font:700 clamp(1.9rem,6vw,2.6rem)/1.15 var(--math); margin-bottom:8px}
+.landing .sub{color:var(--muted); margin-bottom:22px}
+.landing label{display:block; font-weight:600; margin:14px 0 6px}
+.landing .row{display:flex; gap:12px; margin-top:20px; align-items:center; flex-wrap:wrap}
+.code-in{text-transform:uppercase; letter-spacing:.35em; font-weight:700; text-align:center}
+.teacher-link{margin-top:26px; font-size:.92rem; color:var(--muted)}
+.teacher-link button{background:none; border:0; color:var(--blue-d); text-decoration:underline; padding:0}
+.teacher-link a{color:var(--blue-d)}
+
+/* student */
+.s-wrap{max-width:720px; margin:0 auto; padding:14px 14px 80px}
+.s-top{display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap}
+.s-top .team{font-weight:700}
+.s-top .who{color:var(--muted); font-size:.92rem; display:flex; align-items:center; gap:8px}
+.s-top .who button{background:none; border:0; color:var(--muted); text-decoration:underline; padding:0; font-size:.85rem}
+.s-eq{font-size:clamp(1.8rem,7.5vw,3.1rem); margin:8px 0 12px}
+.s-q{font-size:1.1rem; margin-bottom:6px}
+.s-title{font:700 1.6rem var(--math); margin:6px 0 10px}
+.timer{margin:0 0 12px}
+.timer .tl{font:700 1.6rem var(--ui); font-variant-numeric:tabular-nums}
+.timer .tl.low{color:var(--bad)}
+.tbar{height:8px; background:var(--blue-soft); border-radius:99px; overflow:hidden; margin-top:4px}
+.tbar span{display:block; height:100%; background:var(--blue-d); width:100%}
+.wait{text-align:center; padding:28px 8px}
+.wait .big{font:700 1.5rem var(--math); margin-bottom:8px}
+
+/* scoreboard */
+table.score{width:100%; border-collapse:collapse}
+table.score th{font:600 .8rem var(--ui); color:var(--muted); text-align:left; padding:4px 8px 6px; border-bottom:1.5px solid var(--line)}
+table.score td{padding:8px; border-bottom:1px solid var(--line); font-size:1.05rem; text-align:left}
+table.score td.r{width:2.4rem; font-weight:700; color:var(--muted)}
+table.score td.t{text-align:right; font-weight:700; font-variant-numeric:tabular-nums}
+table.score tr.me td{background:var(--blue-soft)}
+table.score tr.first td{font-weight:700}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border:1.5px solid var(--line); border-radius:99px; background:var(--card); font-weight:600}
+.chip.done{border-color:var(--good); background:var(--good-soft); color:var(--good)}
+.chip button{border:0; background:none; color:var(--muted); font-size:1.1rem; line-height:1; padding:0 0 0 2px}
+.rrow{display:grid; grid-template-columns:1fr auto auto; gap:4px 12px; align-items:center; padding:8px 0; border-bottom:1px solid var(--line)}
+.rrow .ans{grid-column:1 / -1; font-size:1.2rem}
+.rrow .nm{font-weight:700}
+.rrow .pts{font-weight:700; font-variant-numeric:tabular-nums}
+.rrow .bonus{color:var(--gold); font-size:.85rem; font-weight:700}
+.ans .ok{color:var(--good); margin-right:.5em}
+.ans .bad{color:var(--bad); margin-right:.5em; text-decoration:underline wavy; text-underline-offset:4px}
+.podium{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; align-items:end; margin:10px 0 22px}
+.pod{text-align:center; padding:18px 10px; border-radius:14px 14px 0 0; border:2px solid var(--line); background:var(--card)}
+.pod .rk{font:700 1.2rem var(--ui); color:var(--muted)}
+.pod .nm{font:700 1.5rem var(--math); margin:6px 0; word-break:break-word}
+.pod .pt{font:700 1.2rem var(--ui)}
+.pod.p1{min-height:230px; border-color:var(--gold); background:var(--gold-soft)}
+.pod.p2{min-height:180px}
+.pod.p3{min-height:140px}
+.pod.p1 .rk{color:var(--gold)}
+
+/* teacher */
+.t-wrap{max-width:1500px; margin:0 auto; padding:14px 18px 120px}
+.t-top{display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; margin-bottom:14px}
+.brand{font:700 1.25rem var(--math)}
+.join{font-size:1.02rem}
+.join .code{font:700 1.5rem var(--ui); letter-spacing:.2em; background:var(--orange); color:#fff; padding:2px 12px; border-radius:8px; margin-left:4px}
+.join .url{font-weight:650; color:var(--blue-d)}
+.t-tools{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+.t-grid{display:grid; grid-template-columns:minmax(0,1.5fr) minmax(320px,1fr); gap:16px; align-items:start}
+.stage{min-height:52vh; padding:24px 28px}
+.t-eq{font-size:clamp(2.4rem,5.2vw,4.4rem); margin:10px 0 14px}
+.t-q{font-size:1.4rem; max-width:44rem}
+.stage .fields{font-size:2.6rem}
+.stage .sol li .sm{font-size:1.9rem}
+.stage .sol li .sl{font-size:1rem}
+.stage .answer-box .math{font-size:3rem}
+.stack{display:grid; gap:14px}
+.stack h3{font-size:1.05rem; margin-bottom:10px}
+.lobby{max-width:900px; margin:0 auto; display:grid; gap:14px}
+.lobby .chip{font-size:1.2rem; padding:8px 16px}
+.settings{display:flex; gap:22px; flex-wrap:wrap; align-items:center}
+.settings label{display:flex; align-items:center; gap:8px; font-weight:600}
+.settings select{font:inherit; padding:7px 10px; border:1.5px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink)}
+.t-foot{position:fixed; left:0; right:0; bottom:0; background:var(--card); border-top:1.5px solid var(--line); padding:10px 18px; display:flex; align-items:center; gap:12px; justify-content:center; flex-wrap:wrap}
+.t-foot .info{font-size:.9rem; color:var(--muted)}
+.t-foot select{font:inherit; padding:7px 10px; border:1.5px solid var(--line); border-radius:8px; background:var(--card); color:var(--ink)}
+.bigtimer .tl{font-size:3rem}
+
+@media (max-width:900px){
+  .t-grid{grid-template-columns:1fr}
+  .stage{padding:18px}
+  .podium{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){ .tbar span{transition:none} }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+/* =====================================================================
+   1. FIREBASE (same project as the other activities)
+   ===================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDkuZVoCbhVotMLGi_iI8wGYCrRKie8ex8",
+  authDomain: "exponentproperties-7198b.firebaseapp.com",
+  databaseURL: "https://exponentproperties-7198b-default-rtdb.firebaseio.com",
+  projectId: "exponentproperties-7198b",
+  appId: "1:189445254765:web:3e6f1c783f9b6fdfa85964"
+};
+
+/* =====================================================================
+   2. TINY DATABASE LAYER (+ server clock so the race is fair)
+   ts()  = a server timestamp to store;  now() = the current server time
+   ===================================================================== */
+const DB = (() => {
+  const live = !!FIREBASE_CONFIG.databaseURL && typeof firebase !== 'undefined';
+  if (live) {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const fdb = firebase.database();
+    let offset = 0;
+    fdb.ref('.info/serverTimeOffset').on('value', s => { offset = s.val() || 0; });
+    return {
+      mode: 'live',
+      ts: () => firebase.database.ServerValue.TIMESTAMP,
+      now: () => Date.now() + offset,
+      set: (p, v) => fdb.ref(p).set(v),
+      remove: p => fdb.ref(p).remove(),
+      once: p => fdb.ref(p).once('value').then(s => s.val()),
+      on: (p, cb) => { const r = fdb.ref(p); const h = r.on('value', s => cb(s.val())); return () => r.off('value', h); }
+    };
+  }
+  const KEY = 'expgame:tree', subs = [];
+  const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } };
+  const get = (t, p) => { const v = p.split('/').reduce((o, k) => (o == null ? null : o[k]), t); return v === undefined ? null : v; };
+  const clone = v => (v == null ? null : JSON.parse(JSON.stringify(v)));
+  const notify = () => { const t = read(); subs.slice().forEach(s => s.cb(clone(get(t, s.p)))); };
+  window.addEventListener('storage', e => { if (e.key === KEY) notify(); });
+  function write(p, v) {
+    const t = read(), ks = p.split('/'); let o = t;
+    ks.slice(0, -1).forEach(k => { if (typeof o[k] !== 'object' || o[k] === null) o[k] = {}; o = o[k]; });
+    if (v === null) delete o[ks[ks.length - 1]]; else o[ks[ks.length - 1]] = v;
+    localStorage.setItem(KEY, JSON.stringify(t)); notify();
+  }
+  return {
+    mode: 'local',
+    ts: () => Date.now(), now: () => Date.now(),
+    set: (p, v) => { write(p, clone(v)); return Promise.resolve(); },
+    remove: p => { write(p, null); return Promise.resolve(); },
+    once: p => Promise.resolve(clone(get(read(), p))),
+    on: (p, cb) => { const s = { p, cb }; subs.push(s); setTimeout(() => { if (subs.includes(s)) cb(clone(get(read(), p))); }, 0); return () => { const i = subs.indexOf(s); if (i >= 0) subs.splice(i, 1); }; }
+  };
+})();
+
+/* =====================================================================
+   3. MATH FORMATTING:  M("x^□ * x^4"),  [a|b] fraction,  ~ invisible times
+   ===================================================================== */
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function mathInner(s) {
+  let t = esc(s);
+  t = t.replace(/[a-z]/g, c => `<i>${c}</i>`);
+  t = t.replace(/\^(\{[^}]*\}|<i>[a-z]<\/i>|-?\d+|\?)/g, (m, g) => '<sup>' + g.replace(/^\{|\}$/g, '') + '</sup>');
+  return t.replace(/\*/g, '·').replace(/~/g, '');
+}
+function M(s) {
+  const parts = [];
+  s = String(s).replace(/\[([^\[\]|]+)\|([^\[\]|]+)\]/g, (m, a, b) => { parts.push([a, b]); return '\u0001' + (parts.length - 1) + '\u0002'; });
+  let t = mathInner(s);
+  t = t.replace(/\u0001(\d+)\u0002/g, (m, i) => `<span class="frac"><span class="np">${mathInner(parts[i][0])}</span><span class="dp">${mathInner(parts[i][1])}</span></span>`);
+  return `<span class="math">${t}</span>`;
+}
+const mathLine = m => M(m);
+const $ = (s, r = document) => r.querySelector(s);
+
+/* =====================================================================
+   4. ROUNDS  (verified: expressions equal their simplified forms,
+      the boxes rebuild the expression, every solution line is valid)
+   ===================================================================== */
+/* Exponent Showdown rounds. Each round: expression -> simplified form typed into boxes.
+   fields: v = variable the exponent belongs to, or null for the coefficient.
+   [a|b] = stacked fraction, ~ = invisible multiplication. */
+const GROUNDS = [
+  { tag: 'Warm-up', w: 1, expr: 'x^5 * x^3', simp: 'x^8',
+    fields: [{ pre: '= x', sup: true, v: 'x', ans: 8 }],
+    sol: [['Product of powers', 'x^5 * x^3 = x^{5+3} = x^8']] },
+  { tag: 'Warm-up', w: 1, expr: '(y^4)^3', simp: 'y^12',
+    fields: [{ pre: '= y', sup: true, v: 'y', ans: 12 }],
+    sol: [['Power of a power', '(y^4)^3 = y^{4*3} = y^12']] },
+  { tag: 'Warm-up', w: 1, expr: '[x^9|x^4]', simp: 'x^5',
+    fields: [{ pre: '= x', sup: true, v: 'x', ans: 5 }],
+    sol: [['Quotient of powers', '[x^9|x^4] = x^{9−4} = x^5']] },
+
+  { tag: 'Two properties', w: 1, expr: '(x^2)^3 * x^4', simp: 'x^10',
+    fields: [{ pre: '= x', sup: true, v: 'x', ans: 10 }],
+    sol: [['Power of a power', '(x^2)^3 = x^6'], ['Product of powers', 'x^6 * x^4 = x^10']] },
+  { tag: 'Two properties', w: 1, expr: '(x^3~y^2)^4', simp: 'x^12~y^8',
+    fields: [{ pre: '= x', sup: true, v: 'x', ans: 12 }, { pre: 'y', sup: true, v: 'y', ans: 8 }],
+    sol: [['Power of a product', '(x^3~y^2)^4 = (x^3)^4 ~ (y^2)^4'], ['Power of a power', '(x^3)^4 ~ (y^2)^4 = x^12~y^8']] },
+  { tag: 'Two properties', w: 1, expr: '[x^8|(x^2)^3]', simp: 'x^2',
+    fields: [{ pre: '= x', sup: true, v: 'x', ans: 2 }],
+    sol: [['Power of a power', '(x^2)^3 = x^6'], ['Quotient of powers', '[x^8|x^6] = x^{8−6} = x^2']] },
+  { tag: 'Two properties', w: 1, expr: '(2~x^3)^2', simp: '4~x^6',
+    fields: [{ pre: '=', v: null, ans: 4 }, { pre: 'x', sup: true, v: 'x', ans: 6 }],
+    sol: [['Power of a product', '(2~x^3)^2 = 2^2 ~ (x^3)^2'], ['Simplify', '2^2 ~ (x^3)^2 = 4~x^6']] },
+  { tag: 'Two properties', w: 1, expr: 'x^3~y^5 * x^4~y^3', simp: 'x^7~y^8',
+    fields: [{ pre: '= x', sup: true, v: 'x', ans: 7 }, { pre: 'y', sup: true, v: 'y', ans: 8 }],
+    sol: [['Group the same bases', 'x^3~y^5 * x^4~y^3 = (x^3 * x^4)~(y^5 * y^3)'], ['Product of powers', '(x^3 * x^4)~(y^5 * y^3) = x^7~y^8']] },
+
+  { tag: 'Three properties', w: 1, expr: '(x^2~y^3)^3 * x^4', simp: 'x^10~y^9',
+    fields: [{ pre: '= x', sup: true, v: 'x', ans: 10 }, { pre: 'y', sup: true, v: 'y', ans: 9 }],
+    sol: [['Power of a product, then power of a power', '(x^2~y^3)^3 = x^6~y^9'], ['Product of powers', 'x^6~y^9 * x^4 = x^10~y^9']] },
+  { tag: 'Three properties', w: 1, expr: '(3~x^2)^3 * x^4', simp: '27~x^10',
+    fields: [{ pre: '=', v: null, ans: 27 }, { pre: 'x', sup: true, v: 'x', ans: 10 }],
+    sol: [['Power of a product, then power of a power', '(3~x^2)^3 = 27~x^6'], ['Product of powers', '27~x^6 * x^4 = 27~x^10']] },
+  { tag: 'Three properties', w: 1, expr: '[(x^5~y^4)^2|x^3]', simp: 'x^7~y^8',
+    fields: [{ pre: '= x', sup: true, v: 'x', ans: 7 }, { pre: 'y', sup: true, v: 'y', ans: 8 }],
+    sol: [['Power of a product, then power of a power', '(x^5~y^4)^2 = x^10~y^8'], ['Quotient of powers', '[x^10~y^8|x^3] = x^7~y^8']] },
+  { tag: 'Three properties', w: 1, expr: '[(2~x^3~y)^4|x^2~y^2]', simp: '16~x^10~y^2',
+    fields: [{ pre: '=', v: null, ans: 16 }, { pre: 'x', sup: true, v: 'x', ans: 10 }, { pre: 'y', sup: true, v: 'y', ans: 2 }],
+    sol: [['Power of a product', '(2~x^3~y)^4 = 2^4 ~ (x^3)^4 ~ y^4'],
+          ['Power of a power', '2^4 ~ (x^3)^4 ~ y^4 = 16~x^12~y^4'],
+          ['Quotient of powers (x)', '[x^12|x^2] = x^10'],
+          ['Quotient of powers (y)', '[y^4|y^2] = y^2'],
+          ['Put it together', '[16~x^12~y^4|x^2~y^2] = 16~x^10~y^2']] },
+  { tag: 'Three properties', w: 1, expr: '[(x^3)^2 * x^5|x^4]', simp: 'x^7',
+    fields: [{ pre: '= x', sup: true, v: 'x', ans: 7 }],
+    sol: [['Power of a power', '(x^3)^2 = x^6'], ['Product of powers', 'x^6 * x^5 = x^11'], ['Quotient of powers', '[x^11|x^4] = x^7']] },
+
+  { tag: 'Finale: double points', w: 2, expr: '[(2~x^2~y^3)^3|4~x^4~y^2]', simp: '2~x^2~y^7',
+    fields: [{ pre: '=', v: null, ans: 2 }, { pre: 'x', sup: true, v: 'x', ans: 2 }, { pre: 'y', sup: true, v: 'y', ans: 7 }],
+    sol: [['Power of a product', '(2~x^2~y^3)^3 = 2^3 ~ (x^2)^3 ~ (y^3)^3'],
+          ['Power of a power', '2^3 ~ (x^2)^3 ~ (y^3)^3 = 8~x^6~y^9'],
+          ['Divide the numbers, then the x’s, then the y’s', '[8~x^6~y^9|4~x^4~y^2] = 2~x^{6−4}~y^{9−2}'],
+          ['Simplify', '2~x^{6−4}~y^{9−2} = 2~x^2~y^7']] }
+];
+
+const BASE_POINTS = 12;           // per round; split evenly across the boxes (finale doubles)
+const SPEED_BONUS = [3, 2, 1];    // fastest fully-correct teams
+const NR = GROUNDS.length;
+
+/* =====================================================================
+   5. STATE
+   ===================================================================== */
+const S = { role: null, code: null, tid: null, tname: '', state: { phase: 'lobby' }, settings: { dur: 0, bonus: true }, teams: {},
+            answers: {}, results: {}, mine: null, draft: {}, ended: false, watchIdx: -1, autoLock: '' };
+const unsubs = {};
+function watch(key, path, cb) { if (unsubs[key]) unsubs[key](); unsubs[key] = DB.on(path, cb); }
+function unwatchAll() { Object.keys(unsubs).forEach(k => { unsubs[k](); delete unsubs[k]; }); }
+const ls = { get: k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, set: (k, v) => localStorage.setItem(k, JSON.stringify(v)), del: k => localStorage.removeItem(k) };
+const rid = () => Math.random().toString(36).slice(2, 10);
+const genCode = () => Array.from({ length: 4 }, () => 'BCDFGHJKMNPQRSTVWXZ'[Math.floor(Math.random() * 19)]).join('');
+const slug = n => n.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 30);
+const joinURL = () => location.href.split('#')[0].split('?')[0];
+const base = () => `sessions/${S.code}`;
+const fmtTime = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+
+function standings() {
+  const tot = {};
+  Object.keys(S.results || {}).forEach(k => { const r = S.results[k] || {}; Object.keys(r).forEach(tid => { tot[tid] = (tot[tid] || 0) + (r[tid].pts || 0); }); });
+  const rows = Object.keys(S.teams).map(tid => ({ tid, name: S.teams[tid].name, total: tot[tid] || 0 }))
+    .sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+  let rank = 0, prev = null;
+  rows.forEach((r, i) => { if (r.total !== prev) { rank = i + 1; prev = r.total; } r.rank = rank; });
+  return rows;
+}
+const roundResults = idx => (S.results && S.results['r' + idx]) || {};
+
+/* =====================================================================
+   6. SHARED PIECES
+   ===================================================================== */
+function fieldsHTML(rd, vals, disabled, grade) {
+  const parts = String(vals == null ? '' : vals).split('|');
+  return `<div class="fields">` + rd.fields.map((f, i) => {
+    const v = parts[i] == null ? '' : parts[i];
+    const cls = grade ? (v !== '' && Number(v) === f.ans ? ' ok' : ' bad') : '';
+    return `<span class="fld">${f.pre ? M(f.pre) : ''}<input class="num${f.sup ? ' sup' : ''}${cls}" data-i="${i}" inputmode="numeric" autocomplete="off" aria-label="Box ${i + 1}" placeholder="?" value="${esc(v)}" ${disabled ? 'disabled' : ''}></span>`;
+  }).join('') + `</div>`;
+}
+function solHTML(rd) {
+  return `<div class="sol"><h3>Worked solution</h3><ol>${rd.sol.map(([l, m]) => `<li><span class="sl">${esc(l)}</span><div class="sm">${mathLine(m)}</div></li>`).join('')}</ol></div>`;
+}
+const answerBox = rd => `<div class="answer-box"><div class="lbl">Simplified answer</div>${M('= ' + rd.simp)}</div>`;
+function submittedAnswerHTML(rd, v) {
+  const parts = String(v || '').split('|');
+  return rd.fields.map((f, i) => {
+    const val = parts[i] == null || parts[i] === '' ? '?' : parts[i];
+    const ok = parts[i] !== '' && parts[i] != null && Number(parts[i]) === f.ans;
+    return `<span class="${ok ? 'ok' : 'bad'}">${M(f.v ? `${f.v}^{${val}}` : val)}</span>`;
+  }).join('');
+}
+function scoreTableHTML(me) {
+  const rows = standings();
+  if (!rows.length) return `<p style="color:var(--muted)">No teams yet.</p>`;
+  return `<table class="score"><thead><tr><th></th><th>Team</th><th style="text-align:right">Points</th></tr></thead><tbody>` +
+    rows.map(r => `<tr class="${r.tid === me ? 'me' : ''} ${r.rank === 1 && r.total > 0 ? 'first' : ''}"><td class="r">${r.rank}</td><td>${esc(r.name)}</td><td class="t">${r.total}</td></tr>`).join('') + `</tbody></table>`;
+}
+function timerHTML(big) {
+  const st = S.state;
+  if (st.phase !== 'round' || st.status !== 'open' || !st.dur) return '';
+  return `<div class="timer ${big ? 'bigtimer' : ''}"><div class="tl" id="tleft">${fmtTime(st.dur * 1000)}</div><div class="tbar"><span id="tfill"></span></div></div>`;
+}
+function tick() {
+  const st = S.state; if (!S.role) return;
+  const left = (st.phase === 'round' && st.status === 'open' && st.dur && st.t0) ? st.t0 + st.dur * 1000 - DB.now() : null;
+  const tl = $('#tleft'), tf = $('#tfill');
+  if (left != null && tl) { tl.textContent = fmtTime(left); tl.classList.toggle('low', left <= 10000); if (tf) tf.style.width = Math.max(0, Math.min(100, (left / (st.dur * 1000)) * 100)) + '%'; }
+  if (S.role === 'teacher' && left != null && left <= 0) {
+    const key = st.idx + ':' + st.t0;
+    if (S.autoLock !== key) { S.autoLock = key; lockRound(st.t0 + st.dur * 1000); }
+  }
+  if (S.role === 'student' && left != null && left <= 0 && S.phaseOpen) { S.phaseOpen = false; renderStudent(); }
+}
+setInterval(tick, 250);
+
+/* =====================================================================
+   7. LANDING
+   ===================================================================== */
+function renderLanding(msg, teacherOpen) {
+  const saved = ls.get('expgame:team') || {};
+  const tsaved = ls.get('expgame:teacher');
+  const qcode = (new URLSearchParams(location.search).get('code') || saved.code || '').toUpperCase();
+  const showT = teacherOpen || new URLSearchParams(location.search).has('teacher');
+  $('#app').innerHTML = `<div class="landing">
+    <h1>Exponent Showdown</h1>
+    <p class="sub">Team up, race to simplify, and climb the scoreboard.</p>
+    ${DB.mode === 'local' ? `<div class="banner"><b>Practice mode.</b> Firebase isn’t set up, so this only syncs between tabs of this browser.</div>` : ''}
+    ${showT ? `
+      <div class="card">
+        <h2 style="font-size:1.2rem;margin-bottom:12px">Teacher</h2>
+        <div class="row" style="margin-top:0">
+          <button class="btn" data-act="newgame">Start a new game</button>
+          ${tsaved ? `<button class="ghost" data-act="resume">Resume ${esc(tsaved.code)}</button>` : ''}
+        </div>
+        <p class="err" id="err">${esc(msg || '')}</p>
+        <p class="teacher-link"><button data-act="studentpanel">I’m a student</button></p>
+      </div>` : `
+      <div class="card">
+        <label for="code" style="margin-top:0">Class code</label>
+        <input id="code" class="txt code-in" maxlength="4" autocomplete="off" value="${esc(qcode)}" placeholder="ABCD">
+        <label for="team">Your team name</label>
+        <input id="team" class="txt" maxlength="24" autocomplete="off" value="${esc(saved.name || '')}" placeholder="Pick a team name">
+        <div class="row"><button class="btn" data-act="join">Join game</button></div>
+        <p class="err" id="err">${esc(msg || '')}</p>
+      </div>
+      <p class="teacher-link">Teacher? <button data-act="teacherpanel">Open teacher controls</button></p>
+      <p class="teacher-link" style="margin-top:10px"><a href="../">← Choose a different activity</a></p>`}
+  </div>`;
+}
+
+/* =====================================================================
+   8. TEACHER
+   ===================================================================== */
+async function newGame() {
+  try {
+    let code;
+    for (let i = 0; i < 12; i++) { code = genCode(); if (!(await DB.once(`sessions/${code}/state`))) break; }
+    await DB.set(`sessions/${code}`, { app: 'game', state: { phase: 'lobby' }, settings: { dur: 0, bonus: true }, created: Date.now() });
+    ls.set('expgame:teacher', { code });
+    startTeacher(code);
+  } catch (e) { renderLanding('Could not reach Firebase. Check your config and database rules.', true); }
+}
+async function resumeGame() {
+  const t = ls.get('expgame:teacher'); if (!t) return;
+  try {
+    const st = await DB.once(`sessions/${t.code}/state`);
+    if (!st) { ls.del('expgame:teacher'); return renderLanding('That game no longer exists.', true); }
+    startTeacher(t.code);
+  } catch (e) { renderLanding('Could not reach Firebase.', true); }
+}
+function setScale(v) { v = Math.min(1.5, Math.max(.875, v)); ls.set('expgame:scale', v); document.documentElement.style.fontSize = (16 * v) + 'px'; }
+function startTeacher(code) {
+  setScale(ls.get('expgame:scale') || 1);
+  Object.assign(S, { role: 'teacher', code, watchIdx: -1, answers: {}, results: {}, teams: {} });
+  watch('state', `${base()}/state`, st => {
+    if (!st) return;
+    S.state = st;
+    if (st.phase === 'round' && st.idx !== S.watchIdx) {
+      S.watchIdx = st.idx; S.answers = {};
+      watch('answers', `${base()}/answers/r${st.idx}`, v => { S.answers = v || {}; renderSide(); });
+    }
+    renderTeacher();
+  });
+  watch('settings', `${base()}/settings`, v => { S.settings = Object.assign({ dur: 0, bonus: true }, v || {}); renderTeacher(); });
+  watch('teams', `${base()}/teams`, v => { S.teams = v || {}; renderSide(); renderLobbyTeams(); });
+  watch('results', `${base()}/results`, v => { S.results = v || {}; renderSide(); });
+}
+const writeState = o => DB.set(`${base()}/state`, o);
+const roundState = (idx, status, extra) => Object.assign({ phase: 'round', idx, status, t0: S.state.t0 || 0, dur: S.state.dur || 0, bonus: !!S.state.bonus }, extra || {});
+function startRound(idx) {
+  return writeState({ phase: 'round', idx, status: 'open', t0: DB.ts(), dur: S.settings.dur || 0, bonus: !!S.settings.bonus });
+}
+function lockRound(at) { const st = S.state; return writeState(roundState(st.idx, 'locked', { lockedAt: at || DB.now() })); }
+function computeResults(st) {
+  const rd = GROUNDS[st.idx];
+  const limit = (st.lockedAt || Math.min(DB.now(), st.dur ? st.t0 + st.dur * 1000 : Infinity)) + 1500;
+  const rows = Object.keys(S.teams).map(tid => {
+    const a = S.answers[tid]; let c = 0;
+    const valid = a && typeof a.t === 'number' && a.t <= limit;
+    if (valid) { const vals = String(a.v).split('|'); rd.fields.forEach((f, i) => { if (vals[i] !== '' && vals[i] != null && Number(vals[i]) === f.ans) c++; }); }
+    return { tid, c, n: rd.fields.length, t: valid ? a.t : null };
+  });
+  const full = rows.filter(r => r.t != null && r.c === r.n).sort((a, b) => a.t - b.t);
+  const bonus = {};
+  if (st.bonus) full.slice(0, SPEED_BONUS.length).forEach((r, i) => { bonus[r.tid] = SPEED_BONUS[i]; });
+  const out = {};
+  rows.forEach(r => { const b = bonus[r.tid] || 0; out[r.tid] = { c: r.c, n: r.n, b, pts: Math.round(BASE_POINTS * rd.w * r.c / r.n) + b }; });
+  return out;
+}
+async function revealRound() {
+  const st = S.state;
+  const res = computeResults(st);
+  await DB.set(`${base()}/results/r${st.idx}`, res);
+  await writeState(roundState(st.idx, 'revealed', { lockedAt: st.lockedAt || DB.now() }));
+}
+
+function renderTeacher() {
+  const st = S.state, ph = st.phase || 'lobby';
+  let main = '', foot = '';
+  if (ph === 'lobby') {
+    main = `<div class="lobby">
+      <div class="card"><h2 style="font-size:1.3rem;margin-bottom:6px">Waiting for teams</h2>
+        <p style="color:var(--muted);margin-bottom:12px">Each team picks a team name when they join. One device per team works best.</p>
+        <div id="teamlist"></div></div>
+      <div class="card"><h3 style="margin-bottom:10px;font-size:1.05rem">Game settings</h3>
+        <div class="settings">
+          <label>Timer per round <select data-set="dur">${[0, 45, 60, 90, 120].map(v => `<option value="${v}" ${(S.settings.dur || 0) === v ? 'selected' : ''}>${v ? v + ' seconds' : 'No timer'}</option>`).join('')}</select></label>
+          <label><input type="checkbox" data-set="bonus" ${S.settings.bonus ? 'checked' : ''}> Speed bonus (+3, +2, +1 for the fastest fully correct teams)</label>
+        </div>
+        <p style="color:var(--muted);margin-top:10px;font-size:.95rem">${NR} rounds. ${BASE_POINTS} points per round, split evenly across the boxes. The finale is worth double.</p></div></div>`;
+    foot = `<button class="btn" data-act="start" id="startbtn">Start game</button>`;
+  } else if (ph === 'final') {
+    const rows = standings(), top = rows.filter(r => r.rank <= 3);
+    const pod = [2, 1, 3].map(k => { const r = rows.find(x => x.rank === k); return r ? `<div class="pod p${k}"><div class="rk">${k === 1 ? '1st place' : k === 2 ? '2nd place' : '3rd place'}</div><div class="nm">${esc(r.name)}</div><div class="pt">${r.total} points</div></div>` : '<div></div>'; }).join('');
+    main = `<div class="lobby"><div class="card" style="text-align:center"><h2 class="s-title" style="font-size:2rem">Final results</h2><div class="podium">${pod}</div>${scoreTableHTML()}</div></div>`;
+    foot = `<span class="info">Great game! Use End game to clear everything.</span>`;
+  } else {
+    const rd = GROUNDS[st.idx], open = st.status === 'open', revealed = st.status === 'revealed';
+    let stage = `<div><span class="pill">Round ${st.idx + 1} of ${NR}</span> <span class="pill phase">${esc(rd.tag)}</span> ${rd.w > 1 ? '<span class="pill gold">Worth double</span>' : ''}</div>`;
+    stage += `<p class="t-q" style="margin-top:12px">Simplify. Fill in the boxes.</p>`;
+    stage += `<div class="eq-wrap"><div class="expr t-eq">${M(rd.expr)}</div></div>`;
+    stage += fieldsHTML(rd, '', true);
+    stage += timerHTML(true);
+    if (revealed) stage += answerBox(rd) + solHTML(rd);
+    main = `<main class="t-grid"><section class="card stage">${stage}</section><aside class="stack" id="side"></aside></main>`;
+    const last = st.idx >= NR - 1;
+    foot = `<span class="info" id="status"></span>` +
+      (open ? `<button class="ghost" data-act="lock">Lock answers</button><button class="btn alt" data-act="reveal">Reveal answers</button>` : '') +
+      (st.status === 'locked' ? `<button class="btn alt" data-act="reveal">Reveal answers</button>` : '') +
+      (revealed ? `<label class="info">Next timer <select data-set="dur">${[0, 45, 60, 90, 120].map(v => `<option value="${v}" ${(S.settings.dur || 0) === v ? 'selected' : ''}>${v ? v + 's' : 'none'}</option>`).join('')}</select></label>
+         ${last ? '' : `<button class="btn" data-act="next">Next round</button>`}<button class="${last ? 'btn' : 'ghost'}" data-act="final">Final results</button>` : '');
+  }
+  $('#app').innerHTML = `<div class="t-wrap">
+    <header class="t-top">
+      <div class="brand">Exponent Showdown</div>
+      <div class="join">Join at <span class="url">${esc(joinURL())}</span> with code <span class="code">${esc(S.code)}</span></div>
+      <div class="t-tools"><span class="pill" id="teamcount"></span>
+        <button class="ghost" data-act="smaller" aria-label="Smaller text">A−</button><button class="ghost" data-act="bigger" aria-label="Larger text">A+</button>
+        <button class="ghost danger" data-act="end">End game</button></div>
+    </header>
+    ${DB.mode === 'local' ? `<div class="banner"><b>Practice mode.</b> Open this page in more tabs and join as teams with code <b>${esc(S.code)}</b>.</div>` : ''}
+    ${main}
+    <footer class="t-foot">${foot}</footer></div>`;
+  renderSide(); renderLobbyTeams(); tick();
+}
+function renderLobbyTeams() {
+  const n = Object.keys(S.teams).length, tc = $('#teamcount'); if (tc) tc.textContent = `${n} team${n === 1 ? '' : 's'}`;
+  const sb = $('#startbtn'); if (sb) sb.disabled = n === 0;
+  const el = $('#teamlist'); if (!el) return;
+  el.innerHTML = n ? `<div class="chips">${Object.keys(S.teams).map(tid => `<span class="chip">${esc(S.teams[tid].name)}<button data-act="rmteam" data-tid="${esc(tid)}" aria-label="Remove team" title="Remove team">×</button></span>`).join('')}</div>` : `<p style="color:var(--muted)">No teams yet. Share the code above.</p>`;
+}
+function renderSide() {
+  const st = S.state; const side = $('#side'); if (!side || st.phase !== 'round' || S.role !== 'teacher') return;
+  const rd = GROUNDS[st.idx], tids = Object.keys(S.teams);
+  const answered = tids.filter(t => S.answers[t]).length;
+  let card;
+  if (st.status !== 'revealed') {
+    card = `<div class="card"><h3>This round</h3><p style="margin-bottom:10px"><b style="font-size:1.6rem">${answered}</b> of ${tids.length} teams have locked in an answer</p>
+      <div class="chips">${tids.map(t => `<span class="chip ${S.answers[t] ? 'done' : ''}">${esc(S.teams[t].name)}${S.answers[t] ? ' ✓' : ''}</span>`).join('') || '<span style="color:var(--muted)">No teams yet.</span>'}</div>
+      <p style="color:var(--muted);margin-top:10px;font-size:.9rem">Answers stay hidden until you reveal.</p></div>`;
+  } else {
+    const res = roundResults(st.idx);
+    const rows = tids.map(t => ({ t, r: res[t] || { c: 0, n: rd.fields.length, b: 0, pts: 0 } })).sort((a, b) => b.r.pts - a.r.pts);
+    card = `<div class="card"><h3>Round ${st.idx + 1} results</h3>${rows.map(({ t, r }) => `<div class="rrow">
+        <span class="nm">${esc(S.teams[t].name)}</span><span style="color:var(--muted)">${r.c} of ${r.n} boxes</span>
+        <span class="pts">+${r.pts}${r.b ? ` <span class="bonus">(+${r.b} speed)</span>` : ''}</span>
+        <div class="ans">${S.answers[t] ? submittedAnswerHTML(rd, S.answers[t].v) : '<span style="color:var(--muted)">No answer</span>'}</div></div>`).join('')}</div>`;
+  }
+  side.innerHTML = card + `<div class="card"><h3>Scoreboard</h3>${scoreTableHTML()}</div>`;
+  const stt = $('#status'); if (stt) stt.textContent = `Round ${st.idx + 1} of ${NR} · ${st.bonus ? 'Speed bonus on' : 'No speed bonus'}${st.dur ? ' · ' + st.dur + 's timer' : ''}`;
+}
+
+/* =====================================================================
+   9. STUDENT (a "team" is one name; devices that type the same name share it)
+   ===================================================================== */
+async function joinGame() {
+  const code = ($('#code').value || '').toUpperCase().trim(), name = ($('#team').value || '').trim().replace(/\s+/g, ' ');
+  const msg = m => { const e = $('#err'); if (e) e.textContent = m; };
+  if (code.length !== 4) return msg('Enter the 4-letter class code.');
+  if (!name) return msg('Pick a team name.');
+  const tid = slug(name) || rid();
+  try {
+    const st = await DB.once(`sessions/${code}/state`);
+    if (!st) return msg('No game found with that code. Check it and try again.');
+    if ((await DB.once(`sessions/${code}/app`)) !== 'game') return msg('That code is for a different activity. Go back and choose the activity your teacher started.');
+    const ex = await DB.once(`sessions/${code}/teams/${tid}`);
+    const display = ex ? ex.name : name;
+    if (!ex) await DB.set(`sessions/${code}/teams/${tid}`, { name, t: Date.now() });
+    ls.set('expgame:team', { code, name: display, tid });
+    startStudent(code, display, tid);
+  } catch (e) { msg('Could not connect. Ask your teacher to check the setup.'); }
+}
+function startStudent(code, name, tid) {
+  Object.assign(S, { role: 'student', code, tid, tname: name, ended: false, watchIdx: -1, mine: null, answers: {}, results: {}, teams: {}, draft: {} });
+  watch('teams', `${base()}/teams`, v => { S.teams = v || {}; S.removed = !(v && v[tid]); renderStudent(); });
+  watch('results', `${base()}/results`, v => { S.results = v || {}; renderStudent(); });
+  watch('settings', `${base()}/settings`, v => { S.settings = Object.assign({ dur: 0, bonus: true }, v || {}); });
+  watch('state', `${base()}/state`, st => {
+    if (!st) { S.ended = true; return renderStudent(); }
+    S.state = st;
+    if (st.phase === 'round' && st.idx !== S.watchIdx) {
+      S.watchIdx = st.idx; S.mine = null; S.draft = {};
+      watch('mine', `${base()}/answers/r${st.idx}/${S.tid}`, v => { S.mine = v; renderStudent(); });
+    }
+    S.phaseOpen = st.phase === 'round' && st.status === 'open';
+    renderStudent();
+  });
+}
+function iCanSubmit() {
+  const st = S.state; if (st.phase !== 'round' || st.status !== 'open') return false;
+  return !st.dur || !st.t0 || DB.now() < st.t0 + st.dur * 1000;
+}
+function renderStudent() {
+  const app = $('#app');
+  if (S.ended) { app.innerHTML = `<div class="s-wrap"><div class="card" style="margin-top:18vh;text-align:center"><h2 class="s-title">This game has ended</h2><p>Thanks for playing!</p><div class="row" style="justify-content:center;margin-top:16px"><button class="ghost" data-act="leave">Join another</button></div></div></div>`; return; }
+  if (S.removed) { app.innerHTML = `<div class="s-wrap"><div class="card" style="margin-top:18vh;text-align:center"><h2 class="s-title">Your team was removed</h2><p>Ask your teacher, then join again with a new team name.</p><div class="row" style="justify-content:center;margin-top:16px;display:flex"><button class="btn" data-act="leave">Join again</button></div></div></div>`; return; }
+  const st = S.state, ph = st.phase || 'lobby';
+  const myRow = standings().find(r => r.tid === S.tid), pts = myRow ? myRow.total : 0;
+  const top = `<div class="s-top"><div><span class="pill">Team</span> <span class="team">${esc(S.tname)}</span></div><div class="who"><span class="pill gold">${pts} pts</span> <button data-act="leave">Leave</button></div></div>`;
+  let body = '';
+  if (ph === 'lobby') {
+    const n = Object.keys(S.teams).length;
+    body = `<div class="wait"><div class="big">You’re in!</div><p>Waiting for your teacher to start the game.</p><p style="color:var(--muted);margin-top:8px">${n} team${n === 1 ? '' : 's'} joined so far.</p></div>`;
+  } else if (ph === 'final') {
+    const rows = standings(), me = rows.find(r => r.tid === S.tid);
+    body = `<h2 class="s-title" style="text-align:center">Final results</h2>${me ? `<p style="text-align:center;margin-bottom:12px">Your team finished <b>#${me.rank}</b> with <b>${me.total}</b> points.</p>` : ''}${scoreTableHTML(S.tid)}`;
+  } else {
+    const rd = GROUNDS[st.idx], open = iCanSubmit(), mineV = S.mine ? S.mine.v : null;
+    const shown = S.draft[st.idx] != null ? S.draft[st.idx] : mineV;
+    body += `<div><span class="pill">Round ${st.idx + 1} of ${NR}</span> <span class="pill phase">${esc(rd.tag)}</span> ${rd.w > 1 ? '<span class="pill gold">Worth double</span>' : ''}</div>`;
+    body += `<div class="eq-wrap"><div class="expr s-eq">${M(rd.expr)}</div></div>`;
+    if (st.status === 'revealed') {
+      const res = roundResults(st.idx)[S.tid];
+      body += `<p class="s-q">Your answer</p>` + fieldsHTML(rd, mineV, true, true);
+      if (res) body += `<div class="verdict ${res.c === res.n ? 'good' : res.c ? 'mid' : 'bad'}">${res.c} of ${res.n} boxes correct: +${res.pts} points${res.b ? ` (includes +${res.b} speed bonus)` : ''}</div>`;
+      else body += `<div class="verdict none">No answer was submitted this round.</div>`;
+      body += answerBox(rd) + solHTML(rd) + `<div class="card" style="margin-top:14px"><h3 style="margin-bottom:8px;font-size:1.05rem">Scoreboard</h3>${scoreTableHTML(S.tid)}</div>`;
+    } else if (open) {
+      body += `<p class="s-q">Simplify. Fill in the boxes.</p>` + timerHTML(false) + fieldsHTML(rd, shown, false);
+      body += `<div class="row" style="margin-top:12px;display:flex"><button class="btn" data-act="submit">${mineV != null ? 'Update answer' : 'Lock in answer'}</button></div><div class="err" id="err"></div>`;
+      if (mineV != null) body += `<div class="ok-msg">Answer locked in. You can change it until time is up.</div>`;
+    } else {
+      body += `<p class="s-q">Your answer</p>` + fieldsHTML(rd, mineV, true) +
+        `<div class="wait"><div class="big">Answers are locked</div><p>${mineV != null ? 'Your answer is in.' : 'No answer was submitted.'} Waiting for the reveal…</p></div>`;
+    }
+  }
+  app.innerHTML = `<div class="s-wrap">${top}<section class="card">${body}</section></div>`;
+  tick();
+}
+async function submit() {
+  const st = S.state, rd = GROUNDS[st.idx], err = m => { const e = $('#err'); if (e) e.textContent = m; };
+  if (!iCanSubmit()) return renderStudent();
+  const vals = [...document.querySelectorAll('.num')].map(i => i.value.trim());
+  if (vals.every(v => v === '')) return err('Fill in at least one box.');
+  if (vals.some(v => v !== '' && isNaN(Number(v)))) return err('Boxes need numbers only.');
+  const v = vals.map(x => (x === '' ? '' : String(Number(x)))).join('|');
+  try { await DB.set(`${base()}/answers/r${st.idx}/${S.tid}`, { v, t: DB.ts() }); delete S.draft[st.idx]; }
+  catch (e) { err('Could not submit. Check your connection and try again.'); }
+}
+
+/* =====================================================================
+   10. EVENTS
+   ===================================================================== */
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const a = b.dataset.act;
+  if (a === 'join') return joinGame();
+  if (a === 'teacherpanel') return renderLanding('', true);
+  if (a === 'studentpanel') { history.replaceState(null, '', joinURL()); return renderLanding(); }
+  if (a === 'newgame') return newGame();
+  if (a === 'resume') return resumeGame();
+  if (a === 'leave') { unwatchAll(); ls.del('expgame:team'); S.role = null; S.ended = false; S.state = { phase: 'lobby' }; return renderLanding(); }
+  if (a === 'submit') return submit();
+  if (S.role !== 'teacher') return;
+  if (a === 'bigger' || a === 'smaller') return setScale((ls.get('expgame:scale') || 1) + (a === 'bigger' ? .125 : -.125));
+  if (a === 'start') return Object.keys(S.teams).length ? startRound(0) : null;
+  if (a === 'lock') return lockRound();
+  if (a === 'reveal') return revealRound();
+  if (a === 'next') return startRound(S.state.idx + 1);
+  if (a === 'final') return writeState({ phase: 'final' });
+  if (a === 'rmteam') return DB.remove(`${base()}/teams/${b.dataset.tid}`);
+  if (a === 'end') {
+    if (!confirm('End this game and delete all teams and scores?')) return;
+    await DB.remove(base()); unwatchAll(); ls.del('expgame:teacher'); document.documentElement.style.fontSize = ''; S.role = null; S.state = { phase: 'lobby' }; renderLanding('Game ended.', true);
+  }
+});
+document.addEventListener('change', e => {
+  const t = e.target.closest('[data-set]'); if (!t || S.role !== 'teacher') return;
+  const k = t.dataset.set;
+  DB.set(`${base()}/settings/${k}`, k === 'bonus' ? t.checked : Number(t.value));
+});
+document.addEventListener('input', e => {
+  if (S.role === 'student' && e.target.matches('.num')) S.draft[S.state.idx] = [...document.querySelectorAll('.num')].map(i => i.value).join('|');
+});
+document.addEventListener('keydown', e => {
+  if (S.role === 'student' && e.key === 'Enter' && e.target.matches('.num')) { e.preventDefault(); return submit(); }
+  if (S.role === null && e.key === 'Enter' && e.target.matches('#code,#team')) return joinGame();
+});
+
+/* =====================================================================
+   11. BOOT
+   ===================================================================== */
+(function boot() {
+  const teacherMode = new URLSearchParams(location.search).has('teacher');
+  const saved = ls.get('expgame:team');
+  if (!teacherMode && saved && saved.code) {
+    DB.once(`sessions/${saved.code}/state`).then(async st => {
+      const app = st ? await DB.once(`sessions/${saved.code}/app`) : null;
+      if (st && app === 'game') startStudent(saved.code, saved.name, saved.tid); else renderLanding();
+    }).catch(() => renderLanding());
+  } else renderLanding();
+})();
+</script>
+</body>
+</html>
